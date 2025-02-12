@@ -1,0 +1,19 @@
+{
+  "name": "heystranger_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon server.js",
+    "app": "node server.js"
+  },
+  "author": "rahulbharti5",
+  "license": "ISC",
+  "dependencies": {
+    "async-mutex": "^0.5.0",
+    "express": "^4.21.1",
+    "socket.io": "^4.8.0",
+    "uuid": "^10.0.0"
+  }
+}
