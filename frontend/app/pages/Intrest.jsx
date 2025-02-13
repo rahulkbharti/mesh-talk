@@ -1,14 +1,17 @@
 import { useDispatch, useSelector } from "react-redux";
 import { addInterest, removeInterest } from "../modules/intrest/intrestSlice";
+import { useRef } from "react";
+// import { use } from "react"
 
 const Interest = () => {
     const dispatch = useDispatch();
     const interests = useSelector((state) => state.intrest.intrest);
+    const input = useRef(null);
     // console.log(interests);
     const handleAddInterest = (interest) => {
+        input.current.value = "";
         dispatch(addInterest(interest));
     };
-
     const handleRemoveInterest = (interest) => {
         dispatch(removeInterest(interest));
     };
@@ -24,8 +27,8 @@ const Interest = () => {
                     </li>
                 ))}
             </ul>
-            <input type="text" id="newInterest" />
-            <button onClick={() => handleAddInterest(document.getElementById('newInterest').value)}>Add Interest</button>
+            <input type="text" id="newInterest" ref={input} />
+            <button onClick={() => handleAddInterest(input.current.value)}>Add Interest</button>
         </div>
     );
 };

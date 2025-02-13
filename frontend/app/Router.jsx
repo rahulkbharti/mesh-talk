@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Posts from "./pages/Posts";
 import Interest from "./pages/Intrest";
+import VideoChat from "./pages/VideoChat";
+import Media from "./pages/Media";
 
 const AppRouter = () => {
     return (
@@ -11,7 +13,10 @@ const AppRouter = () => {
                 <Link to="/about">About</Link> |
                 <Link to="/contact">Contact</Link> |
                 <Link to="/post">Posts</Link> |
-                <Link to="/intrest">Intrest</Link>
+                <Link to="/intrest">Intrest</Link> |
+                <Link to="/video-chat">Video Chat</Link> |
+                <Link to="/media">Video Chat</Link> |
+
             </nav>
 
             <Routes>
@@ -21,6 +26,8 @@ const AppRouter = () => {
                 {/* // for Testing F */}
                 <Route path="/post" element={<Posts />} />
                 <Route path="/intrest" element={<Interest />} />
+                <Route path="/video-chat" element={<VideoChat />} />
+                <Route path="/media" element={<Media />} />
             </Routes>
         </Router>
     );
