@@ -8,7 +8,7 @@ const VideoChat = () => {
     const [value, setValue] = useState(0);
     const interests = useSelector((state) => state.intrest.intrest);
     userData.interests = interests;
-    const { localVideoRef, remoteVideoRef, startCall, endCall, sendMessage, message } = useWebRTC("http://localhost:3000", userData);
+    const { localVideoRef, remoteVideoRef, startCall, endCall, sendMessage, message } = useWebRTC("https://real-time-video-chat-backend.onrender.com", userData);
     const ChatBox = useRef(null);
     // const [message, setMessage] = useState("");
 
