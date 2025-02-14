@@ -15,7 +15,7 @@ const AppRouter = () => {
                 <Link to="/post">Posts</Link> |
                 <Link to="/intrest">Intrest</Link> |
                 <Link to="/video-chat">Video Chat</Link> |
-                <Link to="/media">Video Chat</Link> |
+                <Link to="/media">Media Test</Link> |
 
             </nav>
 

@@ -1,106 +1,191 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, use, useCallback, useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import useMedia from './useMediaDevice';
 
+// import useDataChannel from './useDataChannel';
+
+const setUpChannel = (channel) => {
+    if (!channel) return;
+    channel.onmessage = (event) => {
+        console.log("Message Received:", event.data);
+    };
+    channel.onopen = () => {
+        console.log("Channel Opened");
+        channel.send("Hello from the client!");
+    };
+    channel.onclose = () => {
+        console.log("Channel Closed");
+    };
+    channel.onerror = (error) => {
+        console.log("Channel Error:", error);
+    };
+}
 
 const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
-    const [socket, setSocket] = useState(null);
-    const [remoteStream, setRemoteStream] = useState(null);
-    const peerConnection = useRef(null);
+    console.log("WERTC Rendered!");
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const otherUserId = useRef(null); // Store matched user ID
 
-    // Use the custom media hook
+    const [socket, setSocket] = useState(null);
+    const [connection, setConnection] = useState(null);
     const localStream = useMedia();
-    if (localStream) {
-        if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-    };
+    const [status, setStatus] = useState("idle");
+
+    // 🟢 First useEffect: Initialize and manage socket connection
     useEffect(() => {
-        const newSocket = io(serverUrl);
-        setSocket(newSocket);
 
-        newSocket.emit('match', userData); // Send user data to match
+        const socket = io(serverUrl, { autoConnect: false }); // Manual connection
 
-        newSocket.on('match', ({ roomId, user, type }) => {
-            otherUserId.current = user.id;
-            console.log(`Matched with ${user.username}. Room ID: ${roomId}`);
+        setSocket(socket);
 
-            if (type === "createAnOffer") {
-                startCall(); // Initiate WebRTC offer
-            }
-        });
-
-        newSocket.on('offer', async (offer) => {
-            console.log("Received offer from", otherUserId.current);
-            await peerConnection.current.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await peerConnection.current.createAnswer();
-            await peerConnection.current.setLocalDescription(answer);
-            newSocket.emit('answer', answer, otherUserId.current);
-        });
-
-        newSocket.on('answer', async (answer) => {
-            console.log("Received answer from", otherUserId.current);
-            await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer));
-        });
-
-        newSocket.on('iceCandidate', async (candidate) => {
-            console.log("Received ICE Candidate");
-            await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-        });
-
-        newSocket.on('hangUp', () => {
-            console.log("Call ended by the other user.");
-            endCall();
-        });
+        socket.connect(); // Connect manually
+        socket.on("connect", () => console.log("Socket Connected:", socket.id));
 
         return () => {
-            newSocket.removeAllListeners();
-            newSocket.disconnect();
+            console.log("Socket Cleanup...");
+            socket.disconnect(); // Disconnect on unmount
         };
-    }, [serverUrl, userData]);
+    }, [serverUrl]); // Runs only when `serverUrl` changes
 
-    const startCall = async () => {
-        console.log("Starting Call...");
-        peerConnection.current = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-        });
+    // 🟢 Second useEffect: Handle socket events and media stream updates
+    useEffect(() => {
+        if (!socket) return;
 
-        peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.emit('iceCandidate', event.candidate, otherUserId.current);
+        const handleMatch = ({ roomId, user, type }) => {
+            otherUserId.current = user.id;
+            console.info(`Matched with ${user.username}. Room ID: ${roomId}`);
+            if (type === "createAnOffer") {
+                initateCall(localStream, "offer");
+                console.log('I have to create an offer');
+
+            } else {
+                initateCall(localStream, "answer");
+                console.log('I have to create an answer');
             }
         };
-
-        peerConnection.current.ontrack = (event) => {
-            console.log("Receiving Remote Stream...");
-            setRemoteStream(event.streams[0]);
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
-        };
+        socket.on('match', handleMatch);
 
         if (localStream) {
-            // if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-
-            localStream.getTracks().forEach(track => {
-                peerConnection.current.addTrack(track, localStream);
-            });
-
-            const offer = await peerConnection.current.createOffer();
-            await peerConnection.current.setLocalDescription(offer);
-            socket.emit('offer', offer, otherUserId.current);
-        } else {
-            console.error("Local stream not available");
+            // console.log("Searching For partner:", userData);
+            // socket.emit("match", userData);
+            localVideoRef.current.srcObject = localStream;
         }
-    };
 
-    const endCall = () => {
+        return () => {
+            socket.off("match", handleMatch);
+        };
+    }, [socket, localStream]); // Runs when socket or localStream changes
+
+
+    useEffect(() => {
+        if (!socket && !connection) return;
+
+        const handleOffer = async (offer) => {
+
+            await connection.setRemoteDescription(offer);
+            const answer = await connection.createAnswer();
+            await connection.setLocalDescription(answer);
+            socket.emit("answer", answer, otherUserId.current);
+        }
+        const handleAnswer = async (answer) => {
+            // console.log("Received Answer:", answer);
+            await connection.setRemoteDescription(answer);
+        }
+        const handleIceCandidate = async (candidate) => {
+            // console.log("Received ICE Candidate:", candidate);
+            await connection.addIceCandidate(candidate);
+        }
+        const handleHangUp = () => {
+            console.log("Received HangUp");
+            endCall(false);
+        }
+        socket.on("offer", handleOffer);
+        socket.on("answer", handleAnswer);
+        socket.on("iceCandidate", handleIceCandidate);
+        socket.on("hangUp", handleHangUp);
+
+        return () => {
+            socket.off("offer", handleOffer);
+            socket.off("answer", handleAnswer);
+            socket.off("iceCandidate", handleIceCandidate);
+            socket.off("hangUp", handleHangUp);
+
+            console.log("Connection Cleanup...");
+            // setConnection(null);
+        }
+    }, [connection]); // Runs when connection changes
+
+    const initateCall = (localStream, type = "offer") => {
+        console.log("Starting Call...");
+        const configuration = {
+            iceServers: [
+                {
+                    urls: ["stun:stun.l.google.com:19302"],
+                },
+            ],
+        };
+        const connection = new RTCPeerConnection(configuration);
+        setConnection(connection);
+        if (localStream) {
+            localStream.getTracks().forEach(track => connection.addTrack(track, localStream));
+        }
+
+
+        connection.onicecandidate = (event) => {
+            if (event.candidate) {
+                // console.log("Sending ICE Candidate to Peer:", event.candidate);
+                socket.emit("iceCandidate", event.candidate, otherUserId.current);
+            }
+        };
+        connection.ondatachannel = (event) => {
+            console.log("Data Channel Received:", event.channel);
+            setUpChannel(event.channel);
+        };
+        connection.ontrack = (event) => {
+            // console.log("Received Remote Stream:", event.streams[0]);
+            remoteVideoRef.current.srcObject = event.streams[0];
+        };
+
+        connection.onnegotiationneeded = async () => {
+            console.log("Negotiation Needed...");
+            // const offer = await connection.createOffer();
+            // await connection.setLocalDescription(offer);
+            // socket.emit("offer", offer, otherUserId.current);
+        };
+        // Create Offer or Answer based on type
+        if (type === "offer") {
+            const channel = connection.createDataChannel("chat");
+
+            console.log("Data Channel Created:", channel);
+            setUpChannel(channel);
+            connection.createOffer().then(offer => {
+                connection.setLocalDescription(offer);
+                socket.emit("offer", offer, otherUserId.current);
+            });
+        }
+    }
+
+    const startCall = () => {
+        if (!localStream || !socket) {
+            console.error("Local stream not available at startCall()");
+            return;
+        }
+        console.log("Searching For partner:", userData);
+        socket.emit("match", userData);
+        localVideoRef.current.srcObject = localStream;
+    }
+
+    const endCall = (inform = true) => {
         console.log("Ending Call...");
-        peerConnection.current?.close();
-        setRemoteStream(null);
-        if (localVideoRef.current) localVideoRef.current.srcObject = null;
-        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-        socket.emit("hangUp", otherUserId.current);
-    };
+        if (socket && inform) {
+            socket.emit("hangUp", otherUserId.current);
+        }
+        if (connection) {
+            connection.close();
+        }
+        remoteVideoRef.current.srcObject = null;
+    }
 
     return { localVideoRef, remoteVideoRef, startCall, endCall };
 };

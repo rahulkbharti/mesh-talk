@@ -21,7 +21,9 @@ const mutex = new Mutex();
 io.on('connection', (socket) => {
     console.log('A user connected: Id=> ', socket.id);
     let otherSide = null;
-
+    socket.on("test", () => {
+        socket.emit("test", "Hello");
+    })
     // Handle user registration and matching
     socket.on('register', (userData) => {
         const user = {

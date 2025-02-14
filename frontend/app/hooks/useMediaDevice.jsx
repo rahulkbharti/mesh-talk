@@ -5,7 +5,7 @@ const useMedia = (config = {}) => {
 
     useEffect(() => {
         let mediaStream;
-        navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        navigator.mediaDevices.getUserMedia({ audio: false, video: true })
             .then((stream) => {
                 setStream(stream);
                 mediaStream = stream; // Store the stream for cleanup
