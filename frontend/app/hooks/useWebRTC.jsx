@@ -1,25 +1,7 @@
-import { memo, use, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import useMedia from './useMediaDevice';
 
-// import useDataChannel from './useDataChannel';
-
-const setUpChannel = (channel) => {
-    if (!channel) return;
-    channel.onmessage = (event) => {
-        console.log("Message Received:", event.data);
-    };
-    channel.onopen = () => {
-        console.log("Channel Opened");
-        channel.send("Hello from the client!");
-    };
-    channel.onclose = () => {
-        console.log("Channel Closed");
-    };
-    channel.onerror = (error) => {
-        console.log("Channel Error:", error);
-    };
-}
 
 const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     console.log("WERTC Rendered!");
@@ -29,9 +11,33 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
 
     const [socket, setSocket] = useState(null);
     const [connection, setConnection] = useState(null);
+    const [dataChannel, setDataChannel] = useState(null);
+
     const localStream = useMedia();
     const [status, setStatus] = useState("idle");
+    const [message, setMessage] = useState([]);
 
+    const setUpChannel = (channel) => {
+        if (!channel) return;
+        channel.onmessage = (event) => {
+            console.log("Message Received:", event.data);
+            setMessage((prev) => [...prev, { role: "Peer", message: event.data }]);
+        };
+        channel.onopen = () => {
+            console.log("Channel Opened");
+            channel.send("Your Connected!");
+            setDataChannel(channel);
+            // message.push({ role: "peer", message: "Hello from the client!" });
+        };
+        channel.onclose = () => {
+            setDataChannel(null);
+            console.log("Channel Closed");
+        };
+        channel.onerror = (error) => {
+            setDataChannel(null);
+            console.log("Channel Error:", error);
+        };
+    }
     // 🟢 First useEffect: Initialize and manage socket connection
     useEffect(() => {
 
@@ -132,6 +138,11 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
         }
 
 
+        connection.oniceconnectionstatechange = () => {
+            console.log("ICE Connection State Changed");
+            // setStatus(connection.iceConnectionState);
+        };
+
         connection.onicecandidate = (event) => {
             if (event.candidate) {
                 // console.log("Sending ICE Candidate to Peer:", event.candidate);
@@ -166,6 +177,13 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
         }
     }
 
+    const sendMessage = useCallback((message) => {
+        if (dataChannel) {
+            dataChannel.send(message);
+            setMessage((prev) => [...prev, { role: "You", message }]);
+        }
+    }, [dataChannel]);
+
     const startCall = () => {
         if (!localStream || !socket) {
             console.error("Local stream not available at startCall()");
@@ -184,10 +202,11 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
         if (connection) {
             connection.close();
         }
+        setMessage([]);
         remoteVideoRef.current.srcObject = null;
     }
 
-    return { localVideoRef, remoteVideoRef, startCall, endCall };
+    return { localVideoRef, remoteVideoRef, startCall, endCall, message, sendMessage };
 };
 
 export default useWebRTC;
