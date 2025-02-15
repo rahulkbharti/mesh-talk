@@ -4,6 +4,7 @@ import Posts from "./pages/Posts";
 import Interest from "./pages/Intrest";
 import VideoChat from "./pages/VideoChat";
 import Media from "./pages/Media";
+import Layout from "./layout/Layout";
 
 const AppRouter = () => {
     return (
@@ -22,7 +23,7 @@ const AppRouter = () => {
             <Routes>
                 <Route path="/" element={<>Home</>} />
                 <Route path="/about" element={<>About</>} />
-                <Route path="/contact" element={<>Contact</>} />
+                <Route path="/contact" element={<Layout />} />
                 {/* // for Testing F */}
                 <Route path="/post" element={<Posts />} />
                 <Route path="/intrest" element={<Interest />} />

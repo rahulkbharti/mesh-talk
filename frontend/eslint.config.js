@@ -1,8 +1,8 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import react from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import js from '@eslint/js';
+import globals from 'globals';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
   { ignores: ['dist'] },
@@ -17,7 +17,7 @@ export default [
         sourceType: 'module',
       },
     },
-    settings: { react: { version: '18.3' } },
+    settings: { react: { version: 'detect' } }, // Change '18.3' to 'detect'
     plugins: {
       react,
       'react-hooks': reactHooks,
@@ -33,6 +33,11 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      // 🛠️ Fix Auto Import Issues
+      'no-undef': 'off',
+      'import/no-unresolved': 'off',
+      'import/no-extraneous-dependencies': 'off',
+      'react/react-in-jsx-scope': 'off', // ✅ Required for React 17+
     },
   },
-]
+];

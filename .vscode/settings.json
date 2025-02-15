@@ -1,0 +1,15 @@
+{
+    "javascript.suggest.autoImports": true,
+    "typescript.suggest.autoImports": true,
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.parameterHints.enabled": true,
+    "editor.hover.enabled": true,
+    "editor.suggest.showWords": true,
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "liveServer.settings.multiRootWorkspaceName": "real-time-video-chat-app"
+  }
+  
