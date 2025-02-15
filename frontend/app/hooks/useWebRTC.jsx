@@ -51,6 +51,7 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
         return () => {
             console.log("Socket Cleanup...");
             socket.disconnect(); // Disconnect on unmount
+            otherUserId.current = null;
         };
     }, [serverUrl]); // Runs only when `serverUrl` changes
 

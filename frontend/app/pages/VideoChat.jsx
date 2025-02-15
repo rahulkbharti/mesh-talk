@@ -3,12 +3,15 @@ import useWebRTC from '../hooks/useWebRTC';
 import { useSelector } from 'react-redux';
 
 const userData = { username: "John", interests: ["tech", "gaming"], chatType: "video" };
+const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
 
 const VideoChat = () => {
     const [value, setValue] = useState(0);
     const interests = useSelector((state) => state.intrest.intrest);
     userData.interests = interests;
-    const { localVideoRef, remoteVideoRef, startCall, endCall, sendMessage, message } = useWebRTC("https://real-time-video-chat-backend.onrender.com", userData);
+
+
+    const { localVideoRef, remoteVideoRef, startCall, endCall, sendMessage, message } = useWebRTC(SOCKET_SERVER, userData);
     const ChatBox = useRef(null);
     // const [message, setMessage] = useState("");
 
