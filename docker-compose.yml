@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000"
+    # environment:
+    #   - MONGO_URI=mongodb://mongo:27017/mydb
+    # depends_on:
+    #   - mongo
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8000:80"
+    depends_on:
+      - backend
+    restart: always
+
+  # mongo:
+  #   image: mongo:latest
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   restart: always
+
+volumes:
+  mongo-data:
