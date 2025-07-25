@@ -7,22 +7,25 @@ import Media from "./pages/Media";
 import Layout from "./layout/HomePage";
 import HomePage from "./layout/HomePage";
 import RoomPage from "./pages/RoomPage";
+import LandingPage from "./pages/LandingPage";
+import ConnectionPage from "./pages/ConnectionPage";
 
 const AppRouter = () => {
   return (
     <Router>
-      <nav>
+      {/* <nav>
         <Link to="/">Home</Link> |<Link to="/about">About</Link> |
         <Link to="/contact">Contact</Link> |<Link to="/post">Posts</Link> |
         <Link to="/intrest">Intrest</Link> |
         <Link to="/video-chat">Video Chat</Link> |
         <Link to="/media">Media Test</Link> |
-      </nav>
+      </nav> */}
 
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<RoomPage />} />
         <Route path="/contact" element={<Layout />} />
+        <Route path="/connection" element={<ConnectionPage />} />
         {/* // for Testing F */}
         <Route path="/post" element={<Posts />} />
         <Route path="/intrest" element={<Interest />} />

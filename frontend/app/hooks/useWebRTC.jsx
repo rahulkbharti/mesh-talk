@@ -110,7 +110,7 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     };
     socket.on("match", handleMatch);
 
-    if (localStream) {
+    if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
 
@@ -209,7 +209,9 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
       setUpChannel(event.channel);
     };
     connection.ontrack = (event) => {
-      remoteVideoRef.current.srcObject = event.streams[0];
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
     };
 
     connection.onnegotiationneeded = async () => {
