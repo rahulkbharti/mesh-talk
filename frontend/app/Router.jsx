@@ -1,12 +1,4 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Posts from "./pages/Posts";
-import Interest from "./pages/Intrest";
-import VideoChat from "./pages/VideoChat";
-import Media from "./pages/Media";
-import Layout from "./layout/HomePage";
-import HomePage from "./layout/HomePage";
-import RoomPage from "./pages/RoomPage";
 import LandingPage from "./pages/LandingPage";
 import ConnectionPage from "./pages/ConnectionPage";
 
@@ -23,14 +15,7 @@ const AppRouter = () => {
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/about" element={<RoomPage />} />
-        <Route path="/contact" element={<Layout />} />
         <Route path="/connection" element={<ConnectionPage />} />
-        {/* // for Testing F */}
-        <Route path="/post" element={<Posts />} />
-        <Route path="/intrest" element={<Interest />} />
-        <Route path="/video-chat" element={<VideoChat />} />
-        <Route path="/media" element={<Media />} />
       </Routes>
     </Router>
   );

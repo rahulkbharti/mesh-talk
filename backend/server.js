@@ -30,6 +30,7 @@ io.on('connection', (socket) => {
             id: socket.id,
             username: userData.username,
             interests: userData.interests || [], // assuming interests is an array of strings
+            ...userData
         };
         onlineUsers.push(user);
 
@@ -41,8 +42,9 @@ io.on('connection', (socket) => {
         const user = {
             id: socket.id,
             username: userData?.username,
-            interests: userData?.interests || [], // assuming interests is an array of strings
-            chatType: userData?.chatType
+            interests: userData?.interests || ["Nothing Common"], // assuming interests is an array of strings
+            chatType: userData?.chatType,
+            ...userData
         };
         onlineUsers.push(user);
 

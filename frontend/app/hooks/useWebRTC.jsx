@@ -3,11 +3,9 @@ import io from "socket.io-client";
 import useMedia from "./useMediaDevice";
 
 const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
-  console.log("WERTC Rendered!");
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerData = useRef({
-    id: null,
     username: null,
     interests: [],
     chatType: null,
@@ -26,7 +24,11 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
   const [status, setStatus] = useState("idle"); // 'idle', 'connecting', 'matched', 'connected', 'disconnected', 'error'
   const [message, setMessage] = useState([]);
 
+  const [isVideo, setIsVideo] = useState(true);
+  const [isAudio, setIsAudio] = useState(true);
+
   const updateStatus = (newStatus) => {
+    if (status === "idle" && newStatus === "disconnected") return;
     console.log(`Status changed from ${status} to ${newStatus}`);
     setStatus(newStatus);
   };
@@ -58,7 +60,7 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     };
     channel.onerror = (error) => {
       setDataChannel(null);
-      updateStatus("error");
+      updateStatus("disconnected");
       console.log("Channel Error:", error);
     };
   };
@@ -272,6 +274,22 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     updateStatus("idle");
   };
 
+  const toggleVideo = () => {
+    const newVideoState = !isVideo;
+    localStream.getVideoTracks().forEach((track) => {
+      track.enabled = newVideoState;
+    });
+    setIsVideo(newVideoState);
+  };
+
+  const toggleAudio = () => {
+    const newAudioState = !isAudio;
+    localStream.getAudioTracks().forEach((track) => {
+      track.enabled = newAudioState;
+    });
+    setIsAudio(newAudioState);
+  };
+
   return {
     localVideoRef,
     remoteVideoRef,
@@ -281,6 +299,10 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     sendMessage,
     status, // Expose status to the component
     partnerInfo: peerData.current, // Expose matched user data
+    toggleVideo,
+    toggleAudio,
+    isAudio,
+    isVideo,
   };
 };
 

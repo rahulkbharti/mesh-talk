@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Button,
@@ -17,15 +17,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
   Divider,
-  Badge,
   Tooltip,
   useMediaQuery,
   createTheme,
-  AppBar,
   Toolbar,
   Accordion,
   AccordionSummary,
@@ -36,17 +31,18 @@ import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import SendIcon from "@mui/icons-material/Send";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import InterestsIcon from "@mui/icons-material/Interests";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import ChatIcon from "@mui/icons-material/Chat";
+import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
 
 import { Link } from "react-router-dom";
 import useWebRTC from "../hooks/useWebRTC";
+import { generateUsername } from "../utils/randomUserNameGenerator";
 
 const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
 // Reuse the same theme from landing page
@@ -67,31 +63,19 @@ const darkTheme = createTheme({
 });
 
 const userData = {
-  username: "John",
+  username: generateUsername(),
   chatType: "video",
-  name: "Alex Johnson",
-  age: 28,
-  location: "15 miles away",
-  bio: "Love exploring new places and meeting interesting people. Let's connect!",
-  avatar: "AJ",
   interests: ["test"],
+  country: "India",
 };
 
 const ConnectionPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [message, setMessage] = useState("");
-  // const [status, setStatus] = useState("idle"); // 'idle', 'connecting', 'matched', 'connected', 'disconnected', 'error'
-  //   const [messages, setMessages] = useState([]);
-  const [videoEnabled, setVideoEnabled] = useState(true);
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [connected, setConnected] = useState(false);
-  const [peerInfo, setPeerInfo] = useState(null);
   const [openInterestsDialog, setOpenInterestsDialog] = useState(false);
   const [newInterest, setNewInterest] = useState("");
   const [interests, setInterests] = useState(["Technology", "Travel", "Music"]);
-  const videoRef = useRef(null);
-  const peerVideoRef = useRef(null);
   const chatContainerRef = useRef(null);
 
   // WEBRTC
@@ -104,9 +88,11 @@ const ConnectionPage = () => {
     messages,
     status,
     partnerInfo,
+    toggleAudio,
+    toggleVideo,
+    isAudio,
+    isVideo,
   } = useWebRTC(SOCKET_SERVER, userData);
-
-  // console.log("status", status);
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
@@ -141,14 +127,21 @@ const ConnectionPage = () => {
   };
 
   const handleDisconnect = () => {
-    setConnected(false);
     endCall(); // Ensure to clean up the WebRTC connection
   };
+
+  // handle Connect
+  const handleConnect = () => {
+    startCall(); // Implement this function to initiate new connection
+
+    // Simulate connection after a brief delay (like real connection would take)
+    setTimeout(() => {}, 500);
+  };
+
   const handleSkip = async () => {
     // If currently connected, end the call first
-    if (connected) {
+    if (status === "connected" || status === "connecting") {
       endCall(); // Make sure to implement this function to clean up connections
-      setConnected(false);
 
       // Wait for 1 second before starting new connection
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -156,11 +149,6 @@ const ConnectionPage = () => {
 
     // Start new connection
     startCall(); // Implement this function to initiate new connection
-
-    // Simulate connection after a brief delay (like real connection would take)
-    setTimeout(() => {
-      setConnected(true);
-    }, 500);
   };
   return (
     <ThemeProvider theme={darkTheme}>
@@ -212,18 +200,6 @@ const ConnectionPage = () => {
 
             {/* Right Side - Online Users */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {status === "connected" && (
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  size="small"
-                  startIcon={<CloseIcon />}
-                  onClick={handleDisconnect}
-                  sx={{ textTransform: "none" }}
-                >
-                  Disconnect
-                </Button>
-              )}
               <Chip
                 //   icon={<PeopleIcon fontSize="small" />}
                 label={
@@ -273,6 +249,8 @@ const ConnectionPage = () => {
               display: "flex",
               flexDirection: "column",
               gap: 2,
+              height: isMobile ? "400px" : "calc(100vh - 100px)",
+              overflow: "hidden",
             }}
           >
             {/* Video Container */}
@@ -355,7 +333,7 @@ const ConnectionPage = () => {
                     ref={localVideoRef}
                     autoPlay
                     playsInline
-                    muteds
+                    muted
                     style={{
                       // display: status === "connected" ? "flex" : "none",
                       width: "100%",
@@ -436,41 +414,35 @@ const ConnectionPage = () => {
                 py: 1,
               }}
             >
-              <Tooltip
-                title={videoEnabled ? "Turn off camera" : "Turn on camera"}
-              >
+              <Tooltip title={isVideo ? "Turn off camera" : "Turn on camera"}>
                 <IconButton
-                  color={videoEnabled ? "primary" : "default"}
-                  onClick={() => setVideoEnabled(!videoEnabled)}
+                  color={isVideo ? "primary" : "default"}
+                  onClick={toggleVideo}
                   sx={{
-                    bgcolor: videoEnabled ? "primary.dark" : "background.paper",
+                    bgcolor: isVideo ? "primary.dark" : "background.paper",
                     "&:hover": {
-                      bgcolor: videoEnabled
-                        ? "primary.dark"
-                        : "background.paper",
+                      bgcolor: isVideo ? "primary.dark" : "background.paper",
                     },
                   }}
                 >
-                  {videoEnabled ? <VideocamIcon /> : <VideocamOffIcon />}
+                  {isVideo ? <VideocamIcon /> : <VideocamOffIcon />}
                 </IconButton>
               </Tooltip>
 
               <Tooltip
-                title={audioEnabled ? "Mute microphone" : "Unmute microphone"}
+                title={isAudio ? "Mute microphone" : "Unmute microphone"}
               >
                 <IconButton
-                  color={audioEnabled ? "primary" : "default"}
-                  onClick={() => setAudioEnabled(!audioEnabled)}
+                  color={isAudio ? "primary" : "default"}
+                  onClick={toggleAudio}
                   sx={{
-                    bgcolor: audioEnabled ? "primary.dark" : "background.paper",
+                    bgcolor: isAudio ? "primary.dark" : "background.paper",
                     "&:hover": {
-                      bgcolor: audioEnabled
-                        ? "primary.dark"
-                        : "background.paper",
+                      bgcolor: isAudio ? "primary.dark" : "background.paper",
                     },
                   }}
                 >
-                  {audioEnabled ? <MicIcon /> : <MicOffIcon />}
+                  {isAudio ? <MicIcon /> : <MicOffIcon />}
                 </IconButton>
               </Tooltip>
 
@@ -484,15 +456,39 @@ const ConnectionPage = () => {
                 My Interests
               </Button>
 
-              <Button
-                variant="outlined"
-                color="secondary"
-                startIcon={<SkipNextIcon />}
-                onClick={handleSkip}
-                sx={{ textTransform: "none" }}
-              >
-                Skip
-              </Button>
+              {status === "connected" && (
+                <>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<SkipNextIcon />}
+                    onClick={handleSkip}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Skip
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<PersonOffIcon />}
+                    onClick={handleDisconnect}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Disconnect
+                  </Button>
+                </>
+              )}
+              {status !== "connected" && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<PersonAddAltIcon />}
+                  onClick={handleConnect}
+                  sx={{ textTransform: "none" }}
+                >
+                  Connect
+                </Button>
+              )}
             </Box>
           </Box>
 
@@ -504,7 +500,7 @@ const ConnectionPage = () => {
               flexDirection: "column",
               gap: 2,
               minWidth: isMobile ? "100%" : "300px",
-              height: isMobile ? "auto" : "calc(100vh - 100px)",
+              height: isMobile ? "400px" : "calc(100vh - 100px)",
               overflow: "hidden",
             }}
           >
@@ -533,28 +529,28 @@ const ConnectionPage = () => {
                   <Grid container spacing={1} sx={{ mb: 2 }}>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
-                        Name:
+                        Username:
                       </Typography>
-                      <Typography>{partnerInfo?.name}</Typography>
+                      <Typography>{partnerInfo?.username}</Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    {/* <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
                         Age:
                       </Typography>
                       <Typography>{partnerInfo?.age}</Typography>
-                    </Grid>
+                    </Grid> */}
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
                         From:
                       </Typography>
                       <Typography>{partnerInfo?.country}</Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    {/* <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
                         Gender:
                       </Typography>
                       <Typography>{partnerInfo?.gender}</Typography>
-                    </Grid>
+                    </Grid> */}
                   </Grid>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="body2" color="text.secondary">
@@ -587,6 +583,7 @@ const ConnectionPage = () => {
                 display: "flex",
                 flexDirection: "column",
                 minHeight: isMobile ? "300px" : 0,
+                maxHeight: isMobile ? "400px" : "100%",
                 overflow: "hidden",
               }}
             >
@@ -667,7 +664,7 @@ const ConnectionPage = () => {
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {connected
+                      {status === "connected"
                         ? "Say hello to your new connection!"
                         : "You'll be able to chat once connected"}
                     </Typography>
