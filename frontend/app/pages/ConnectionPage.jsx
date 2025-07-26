@@ -25,6 +25,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  CircularProgress,
 } from "@mui/material";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
@@ -453,7 +454,7 @@ const ConnectionPage = () => {
                 onClick={() => setOpenInterestsDialog(true)}
                 sx={{ textTransform: "none" }}
               >
-                My Interests
+                {isMobile ? "" : "My Interests"}
               </Button>
 
               {status === "connected" && (
@@ -465,7 +466,7 @@ const ConnectionPage = () => {
                     onClick={handleSkip}
                     sx={{ textTransform: "none" }}
                   >
-                    Skip
+                    {isMobile ? "" : "Skip"}
                   </Button>
                   <Button
                     variant="outlined"
@@ -474,7 +475,7 @@ const ConnectionPage = () => {
                     onClick={handleDisconnect}
                     sx={{ textTransform: "none" }}
                   >
-                    Disconnect
+                    {isMobile ? "" : "Disconnect"}
                   </Button>
                 </>
               )}
@@ -482,11 +483,17 @@ const ConnectionPage = () => {
                 <Button
                   variant="outlined"
                   color="primary"
-                  startIcon={<PersonAddAltIcon />}
+                  startIcon={
+                    status === "connecting" ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      <PersonAddAltIcon />
+                    )
+                  }
                   onClick={handleConnect}
                   sx={{ textTransform: "none" }}
                 >
-                  Connect
+                  {isMobile ? "" : "Connect"}
                 </Button>
               )}
             </Box>
