@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import {
   Box,
   Button,
@@ -44,6 +44,8 @@ import PersonOffIcon from "@mui/icons-material/PersonOff";
 import { Link } from "react-router-dom";
 import useWebRTC from "../hooks/useWebRTC";
 import { generateUsername } from "../utils/randomUserNameGenerator";
+import { useSelector, useDispatch } from "react-redux";
+import { addInterest, removeInterest } from "../modules/intrest/intrestSlice";
 
 const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
 // Reuse the same theme from landing page
@@ -63,12 +65,12 @@ const darkTheme = createTheme({
   },
 });
 
-const userData = {
-  username: generateUsername(),
-  chatType: "video",
-  interests: ["test"],
-  country: "India",
-};
+// const userData = {
+//   username: generateUsername(),
+//   chatType: "video",
+//   interests: ["test"],
+//   country: "India",
+// };
 
 const ConnectionPage = () => {
   const theme = useTheme();
@@ -76,8 +78,9 @@ const ConnectionPage = () => {
   const [message, setMessage] = useState("");
   const [openInterestsDialog, setOpenInterestsDialog] = useState(false);
   const [newInterest, setNewInterest] = useState("");
-  const [interests, setInterests] = useState(["Technology", "Travel", "Music"]);
   const chatContainerRef = useRef(null);
+  const dispatch = useDispatch();
+  const userData = useSelector((state) => state.userData);
 
   // WEBRTC
   const {
@@ -108,17 +111,6 @@ const ConnectionPage = () => {
       sendMessage(message.trim());
       setMessage("");
     }
-  };
-
-  const handleAddInterest = () => {
-    if (newInterest.trim() && !interests.includes(newInterest)) {
-      setInterests((prev) => [...prev, newInterest]);
-      setNewInterest("");
-    }
-  };
-
-  const handleRemoveInterest = (interestToRemove) => {
-    setInterests((prev) => prev.filter((i) => i !== interestToRemove));
   };
 
   const handleKeyPress = (e) => {
@@ -395,7 +387,7 @@ const ConnectionPage = () => {
                   >
                     {{
                       idle: "Chillin’ for now. Hit Start when you’re ready to connect ✨",
-                      connecting: `We're finding someone who shares your interests: ${interests.join(
+                      connecting: `We're finding someone who shares your interests: ${userData?.interests.join(
                         ", "
                       )}`,
                       connected: "Say hi and see where the convo takes you 👋",
@@ -738,7 +730,10 @@ const ConnectionPage = () => {
             />
             <Button
               variant="contained"
-              onClick={handleAddInterest}
+              onClick={() => {
+                dispatch(addInterest(newInterest.trim()));
+                setNewInterest("");
+              }}
               disabled={!newInterest.trim()}
               startIcon={<AddIcon />}
             >
@@ -752,13 +747,13 @@ const ConnectionPage = () => {
             Your Current Interests:
           </Typography>
 
-          {interests.length > 0 ? (
+          {userData?.interests.length > 0 ? (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {interests.map((interest, index) => (
+              {userData?.interests.map((interest, index) => (
                 <Chip
                   key={index}
                   label={interest}
-                  onDelete={() => handleRemoveInterest(interest)}
+                  onDelete={() => dispatch(removeInterest(interest))}
                   color="primary"
                   sx={{ mb: 1 }}
                 />

@@ -9,134 +9,127 @@ const app = express();
 const server = http.createServer(app);
 const io = new socketIo(server, {
     cors: {
-        origin: "*", // Frontend URLs
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
 
-// Array to store users currently online
-let onlineUsers = [];
+// Use a Set for faster lookups and deduplication
+const onlineUsers = new Map(); // Using Map for O(1) access by socket ID
 const mutex = new Mutex();
+let connectionCounter = 0;
+
+// Event handler mapping to avoid code duplication
+const socketEventHandlers = {
+    'register': handleUserRegistration,
+    'match': handleUserRegistration,
+    'offer': (socket, [offer, toSocketId]) => {
+        socket.to(toSocketId).emit("offer", offer);
+    },
+    'iceCandidate': (socket, [candidate, toSocketId]) => {
+        socket.to(toSocketId).emit("iceCandidate", candidate);
+    },
+    'answer': (socket, [answer, toSocketId]) => {
+        socket.to(toSocketId).emit("answer", answer);
+    },
+    'hangUp': (socket, [toSocketId]) => {
+        socket.to(toSocketId).emit("hangUp");
+    }
+};
 
 io.on('connection', (socket) => {
-    console.log('A user connected: Id=> ', socket.id);
-    let otherSide = null;
-    socket.on("test", () => {
-        socket.emit("test", "Hello");
-    })
-    // Handle user registration and matching
-    socket.on('register', (userData) => {
-        const user = {
-            id: socket.id,
-            username: userData.username,
-            interests: userData.interests || [], // assuming interests is an array of strings
-            ...userData
-        };
-        onlineUsers.push(user);
+    console.log('User connected:', socket.id);
 
-        // Attempt to match with another user
-        matchAndConnect(socket, user).then(r => { });
-    });
-
-    socket.on("match", (userData) => {
-        const user = {
-            id: socket.id,
-            username: userData?.username,
-            interests: userData?.interests || ["Nothing Common"], // assuming interests is an array of strings
-            chatType: userData?.chatType,
-            ...userData
-        };
-        onlineUsers.push(user);
-
-        // Attempt to match with another user
-        matchAndConnect(socket, user).then(bestMatch => { });
-    });
-
-    socket.on("offer", (offer, toSocketId) => {
-        console.log("Transferring offer to Answerer to :", toSocketId);
-        socket.to(toSocketId).emit("offer", offer);
-    });
-
-    socket.on("iceCandidate", (candidate, toSocketId) => {
-        console.log("Transferring candidate to :", toSocketId);
-        socket.to(toSocketId).emit("iceCandidate", candidate);
-    });
-
-    socket.on("answer", (answer, toSocketId) => {
-        console.log("Transferring the answer to :", toSocketId);
-        socket.to(toSocketId).emit("answer", answer);
-    });
-
-    socket.on("hangUp", (toSocketId) => {
-        console.log("sending HangUp to:", toSocketId);
-        socket.to(toSocketId).emit("hangUp");
-    });
+    // Set up all event listeners
+    for (const [event, handler] of Object.entries(socketEventHandlers)) {
+        socket.on(event, (...args) => handler(socket, args));
+    }
 
     socket.on('disconnect', () => {
-        console.log('User disconnected');
-        // Remove user from onlineUsers array on disconnect
-        onlineUsers = onlineUsers.filter(u => u.id !== socket.id);
+        console.log('User disconnected:', socket.id);
+        onlineUsers.delete(socket.id);
     });
 });
 
-let connectionNumber = 0;
+async function handleUserRegistration(socket, [userData]) {
+    if (!userData.interests?.length) {
+        userData.interests = ["Nothing Common"];
+    }
+    userData.id = socket.id;
+
+    onlineUsers.set(socket.id, userData);
+    await matchAndConnect(socket, userData);
+}
 
 async function matchAndConnect(socket, currentUser) {
-    // Find a matching user with highest interest score
-    const release = await mutex.acquire(); // Acquire the mutex
-    console.log("-------------------------------------------");
-    console.log("Connection Number:", ++connectionNumber);
-    console.log("Lock Acquired by user:", currentUser.username);
-    console.log("Chat Type:", currentUser.chatType);
-
-    let bestMatch = null;
+    const release = await mutex.acquire();
+    const connectionId = ++connectionCounter;
 
     try {
-        let maxInterestScore = -1;
-        onlineUsers.forEach(user => {
-            if ((user.id !== currentUser.id) && (user.chatType === currentUser.chatType)) {
-                const interestScore = calculateInterestScore(currentUser, user);
-                if (interestScore > maxInterestScore) {
-                    maxInterestScore = interestScore;
-                    bestMatch = user;
-                }
+        console.log("-------------------------------------------");
+        console.log(`Connection ${connectionId}: Processing ${currentUser.username}`);
+        console.log("Chat Type:", currentUser.chatType);
+
+        let bestMatch = null;
+        let maxScore = -1;
+        let commonInterests = [];
+
+        // Efficient matching with early exit possibilities
+        for (const [id, user] of onlineUsers.entries()) {
+            if (id === currentUser.id || user.chatType !== currentUser.chatType) continue;
+
+            const sharedInterests = calculateInterestScore(currentUser, user);
+            if (sharedInterests.length > maxScore) {
+                maxScore = sharedInterests.length;
+                bestMatch = user;
+                commonInterests = sharedInterests;
+
+                // Early exit if perfect match found
+                if (maxScore === currentUser.interests.length) break;
             }
-        });
-        console.log("Best Match:", bestMatch, "Interest Score:", maxInterestScore);
-        if (bestMatch && maxInterestScore > 0) {
-            // Remove both users from onlineUsers array
-            onlineUsers = onlineUsers.filter(u => u.id !== currentUser.id && u.id !== bestMatch.id);
+        }
 
-            // Create a unique room ID for the chat session
+        if (bestMatch && maxScore > 0) {
+            // Remove matched users
+            onlineUsers.delete(currentUser.id);
+            onlineUsers.delete(bestMatch.id);
+
             const roomId = uuidv4();
+            bestMatch.commonInterests = commonInterests;
+            bestMatch.interestScore = maxScore;
 
-            // Notify both users about the room ID and each other's details
-            io.to(currentUser.id).emit('match', { roomId, user: bestMatch, type: "createAnOffer" });
-            io.to(bestMatch.id).emit('match', { roomId, user: currentUser, type: "listenForOffer" });
-            console.log(`Match Found with ${bestMatch.username}, exchanging the Ids.`);
+            io.to(currentUser.id).emit('match', {
+                roomId,
+                user: bestMatch,
+                type: "createAnOffer"
+            });
+            io.to(bestMatch.id).emit('match', {
+                roomId,
+                user: currentUser,
+                type: "listenForOffer"
+            });
+
+            console.log(`Matched ${currentUser.username} with ${bestMatch.username}`);
         } else {
-            // If no suitable match is found, notify the current user
-            io.to(currentUser.id).emit('noMatch', `No suitable users available right now with your intrest:[${currentUser.interests}]. Please try again later or Connect Randomly.`);
+            io.to(currentUser.id).emit('noMatch',
+                `No suitable matches found for interests: [${currentUser.interests}]`
+            );
         }
     } catch (error) {
-        io.to(currentUser.id).emit('onError', 'Something Wrong Happened. Please try again later.');
+        console.error('Matching error:', error);
+        io.to(currentUser.id).emit('onError', 'Error during matching. Please try again.');
     } finally {
-        console.log("Released the Lock.");
-        release();  // Release the mutex
+        release();
         console.log("-------------------------------------------");
     }
-
-    return bestMatch;
 }
 
 function calculateInterestScore(user1, user2) {
-    // Simple matching score based on number of shared interests
-    const interests1 = new Set(user1.interests);
-    const interests2 = new Set(user2.interests);
-    const sharedInterests = [...interests1].filter(interest => interests2.has(interest));
-    return sharedInterests.length;
+    // Optimized interest calculation using Set intersection
+    const set1 = new Set(user1.interests);
+    return user2.interests.filter(interest => set1.has(interest));
 }
 
 server.listen(PORT, () => {
-    console.log('Server running on port 3000');
+    console.log(`Server running on port ${PORT}`);
 });

@@ -42,7 +42,7 @@ real-time-video-chat-app/
      ```
    - Frontend:
      ```bash
-     cd ../frontend
+     cd frontend
      npm install
      ```
 

@@ -1,22 +1,32 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
+import { generateUsername } from "../../utils/randomUserNameGenerator";
 
-const intrestSlice = createSlice({
-    name: 'intrest',
-    initialState: {
-        intrest: ["Test"],
+const userSlice = createSlice({
+  name: "user",
+  initialState: {
+    username: generateUsername(),
+    chatType: "video",
+    interests: [],
+    country: "India",
+  },
+  reducers: {
+    setUserData: (state, action) => {
+      state = action.payload;
     },
-    reducers: {
-        addInterest: (state, action) => {
-            state.intrest = [...state.intrest, action.payload];
-        },
-        removeInterest: (state, action) => {
-            state.intrest = state.intrest.filter((intrest) => intrest !== action.payload);
-        },
-        removeAllInterest: (state) => {
-            state.intrest = ["Test"];
-        }
+    addInterest: (state, action) => {
+      state.interests.push(action.payload);
     },
+    removeInterest: (state, action) => {
+      state.interests = state.interests.filter(
+        (interest) => interest !== action.payload
+      );
+    },
+    removeAllInterests: (state) => {
+      state.interests = [];
+    },
+  },
 });
 
-export const { addInterest, removeInterest, removeAllIntrest } = intrestSlice.actions;
-export default intrestSlice.reducer;
+export const { setUserData, addInterest, removeInterest, removeAllInterests } =
+  userSlice.actions;
+export default userSlice.reducer;
