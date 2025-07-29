@@ -240,8 +240,10 @@ const LandingPage = () => {
                   <Box
                     sx={{
                       height: 300,
-                      background:
-                        "linear-gradient(45deg, #00bcd4 0%, #ff4081 100%)",
+                      backgroundImage:
+                        "url('https://your-image-url.com/cover.jpg')",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                       borderRadius: 3,
                       display: "flex",
                       alignItems: "center",
@@ -249,6 +251,7 @@ const LandingPage = () => {
                       color: "white",
                     }}
                   >
+                    {/* Optional content here */}
                     <Typography variant="h4">Video Chat Preview</Typography>
                   </Box>
                 </Paper>
