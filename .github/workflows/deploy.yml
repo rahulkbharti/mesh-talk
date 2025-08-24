@@ -1,38 +1,52 @@
 name: Deploy React Frontend to GitHub Pages
 
 on:
-  workflow_dispatch: # Enables manual trigger from GitHub Actions tab
+  push:
+    # branches: ["main"]  # Or your default branch
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend # Run all commands inside frontend folder
-
     steps:
-      # Step 1: Checkout repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20' # or your preferred version
+          node-version: 20
+          cache: "npm"
 
-      # Step 3: Install dependencies
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm install
 
-      # Step 4: Build React app
       - name: Build React app
+        working-directory: ./frontend
         run: npm run build
 
-      # Step 5: Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/dist
+          path: ./frontend/dist  # ✅ Upload built files
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
