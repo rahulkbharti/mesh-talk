@@ -1,9 +1,13 @@
-name: Deploy React Frontend to GitHub Pages
+# Workflow for deploying a Vite React app from a 'frontend' directory
+name: Deploy React Frontend to Pages
 
 on:
-  workflow_dispatch: # Enables manual trigger from GitHub Actions tab
-  push:
-    branches: [ "main" ] # Also deploy on push to main branch
+  # Runs on pushes targeting the default branch
+  # push:
+  #   branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -11,55 +15,59 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Allow only one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        # This downloads both frontend and backend code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          # Cache path must point to frontend's lock file
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        # This is the KEY step. It runs 'npm ci' inside the 'frontend' folder.
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend
+        # This also runs inside the 'frontend' folder.
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: SPA fallback (copy index.html to 404.html)
+        run: cp ./frontend/dist/index.html ./frontend/dist/404.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload only the build output from the frontend folder
+          path: ./frontend/dist
+
+  # Deployment job
+  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend # Run all commands inside frontend folder
-
+    # This job waits for the build job to succeed
+    needs: build
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Step 2: Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: npm ci
-
-      # Step 4: Build React app
-      - name: Build React app
-        run: npm run build
-
-      # Step 5: Setup Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      # Step 6: Upload artifact
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./frontend/dist
-
-      # Step 7: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
