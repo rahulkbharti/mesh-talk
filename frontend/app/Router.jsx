@@ -4,7 +4,7 @@ import ConnectionPage from "./pages/ConnectionPage";
 
 const AppRouter = () => {
   return (
-    <Router>
+    <Router basename="/mesh-talk">
       {/* <nav>
         <Link to="/">Home</Link> |<Link to="/about">About</Link> |
         <Link to="/contact">Contact</Link> |<Link to="/post">Posts</Link> |
