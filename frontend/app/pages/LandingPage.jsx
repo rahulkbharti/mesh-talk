@@ -16,6 +16,14 @@ import {
   Divider,
   IconButton,
   Chip,
+  GlobalStyles,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Videocam as VideocamIcon,
@@ -26,44 +34,126 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  People as PeopleIcon,
+  Favorite as FavoriteIcon,
+  Menu as MenuIcon,
+  Home as HomeIcon,
+  ContactMail as ContactMailIcon,
+  Psychology as PsychologyIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
-// Create a dark theme
-const darkTheme = createTheme({
+// --- CSS Animation for Floating Hearts ---
+const floatingHeartsAnimation = `
+  @keyframes floatHearts {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100vh);
+      opacity: 0;
+    }
+  }
+
+  .heart {
+    position: fixed;
+    bottom: -50px; 
+    font-size: 1.5rem;
+    color: rgba(233, 30, 99, 0.5); /* Pink with transparency */
+    animation: floatHearts linear infinite;
+    pointer-events: none; 
+    z-index: 9998; 
+  }
+`;
+
+// --- Floating Hearts Component ---
+const FloatingHearts = () => {
+  const isSmall = useMediaQuery('(max-width:600px)');
+  const heartsCount = isSmall ? 8 : 15;
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        pointerEvents: "none",
+        zIndex: 9998,
+      }}
+    >
+      {[...Array(heartsCount)].map((_, i) => (
+        <FavoriteIcon
+          key={i}
+          className="heart"
+          sx={{
+            left: `${Math.random() * 100}vw`,
+            animationDuration: `${Math.random() * 5 + 5}s`,
+            animationDelay: `${Math.random() * 5}s`,
+            fontSize: `${Math.random() * 1.5 + 0.5}rem`,
+          }}
+        />
+      ))}
+    </Box>
+  );
+};
+
+// --- Create a Dark Pink Love Theme ---
+const darkPinkLoveTheme = createTheme({
   palette: {
-    mode: "dark",
+    mode: "dark", // Dark theme
     primary: {
-      main: "#00bcd4",
+      main: "#E91E63", // Strong Pink
     },
     secondary: {
-      main: "#ff4081",
+      main: "#FF80AB", // Lighter Pink
     },
     background: {
-      default: "#121212",
-      paper: "#1e1e1e",
+      default: "#121212", // Standard Dark Background
+      paper: "#1e1e1e", // Softer Dark for Cards
+    },
+    text: {
+      primary: "#ffffff",
+      secondary: "#bbbbbb",
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif', // Playful font
     h1: {
       fontWeight: 700,
       fontSize: "3.5rem",
+      color: "#ffffff", // White heading for dark theme
     },
     h4: {
       fontWeight: 600,
+      color: "#f0f0f0",
     },
   },
 });
 
 const LandingPage = () => {
-  const theme = useTheme();
   const [onlineUsers, setOnlineUsers] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isXs = useMediaQuery('(max-width:600px)');
+
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setDrawerOpen(open);
+  };
+
+  const menuItems = [
+    { text: 'Home', icon: <HomeIcon />, href: '#hero' },
+    { text: 'Features', icon: <PsychologyIcon />, href: '#features' },
+    { text: 'Start Chatting', icon: <ChatIcon />, link: '/connection' },
+    { text: 'Contact', icon: <ContactMailIcon />, href: '#contact' },
+  ];
 
   // Simulate live user count
   useEffect(() => {
-    // In a real app, you would fetch this from your backend
     const initialCount = Math.floor(Math.random() * 5000) + 1000;
     setOnlineUsers(initialCount);
 
@@ -78,36 +168,43 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={darkPinkLoveTheme}>
       <CssBaseline />
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+      <GlobalStyles styles={floatingHeartsAnimation} />
+      <FloatingHearts />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "background.default",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
         {/* Header */}
         <AppBar
           position="static"
+          color="transparent"
           elevation={0}
           sx={{
-            bgcolor: "background.paper",
-            borderBottom: `1px solid ${theme.palette.divider}`,
+            pt: 2,
+            px: { xs: 2, md: 4 },
           }}
         >
-          <Container maxWidth="lg">
-            <Toolbar
-              disableGutters
-              sx={{ justifyContent: "space-between", py: 1 }}
-            >
+          <Container maxWidth="lg" disableGutters>
+            <Toolbar sx={{ p: '0 !important', justifyContent: "space-between" }}>
               {/* Left Side - Logo */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Avatar
                   sx={{
                     width: 40,
                     height: 40,
-                    bgcolor: theme.palette.primary.main,
+                    bgcolor: "primary.main",
                     color: "white",
                     fontWeight: "bold",
                     fontSize: "1.2rem",
                   }}
                 >
-                  SC
+                  <FavoriteIcon />
                 </Avatar>
                 <Typography
                   variant="h6"
@@ -115,57 +212,228 @@ const LandingPage = () => {
                   component="div"
                   sx={{
                     fontWeight: 700,
-                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
+                    color: "primary.main",
+                    display: { sm: 'block' },
                   }}
                 >
-                  StrangerConnect
+                  LoveConnect
                 </Typography>
               </Box>
 
-              {/* Right Side - Online Users */}
+              <Box sx={{ flexGrow: 1 }} />
+
+              {/* Center - Nav Links (hidden on mobile) */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2, mr: 2 }}>
+                <Button
+                  color="inherit"
+                  component="a"
+                  href="#features"
+                  sx={{
+                    textTransform: 'none',
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' }
+                  }}
+                >
+                  Features
+                </Button>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/connection"
+                  sx={{
+                    textTransform: 'none',
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' }
+                  }}
+                >
+                  Start Chatting
+                </Button>
+                <Button
+                  color="inherit"
+                  component="a"
+                  href="#contact"
+                  sx={{
+                    textTransform: 'none',
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' }
+                  }}
+                >
+                  Contact
+                </Button>
+              </Box>
+
+              {/* Right Side - Online Users & Menu Button */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Chip
-                  icon={<PeopleIcon fontSize="small" />}
+                  icon={<FavoriteIcon fontSize="small" sx={{ color: "primary.main" }} />}
                   label={
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {onlineUsers.toLocaleString()} online now
+                      {onlineUsers.toLocaleString()} online
                     </Typography>
                   }
                   sx={{
-                    bgcolor: theme.palette.primary.dark,
-                    color: "white",
+                    bgcolor: "rgba(233, 30, 99, 0.1)",
+                    color: "primary.main",
+                    border: "1px solid",
+                    borderColor: "primary.main",
                     px: 1,
-                    "& .MuiChip-icon": { color: "white" },
+                    display: { sm: 'flex' },
                   }}
                 />
-                {/* <Button
-                  variant="contained"
+                {/* Mobile Menu Icon */}
+                <IconButton
+                  aria-label="menu"
                   color="primary"
-                  size="small"
+                  onClick={toggleDrawer(true)}
                   sx={{
-                    borderRadius: 2,
-                    px: 3,
-                    textTransform: "none",
-                    fontWeight: 600,
+                    display: { xs: 'flex', md: 'none' },
+                    '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' }
                   }}
                 >
-                  Join Now
-                </Button> */}
+                  <MenuIcon />
+                </IconButton>
               </Box>
             </Toolbar>
           </Container>
         </AppBar>
 
+        {/* Side Drawer for Mobile */}
+        <Drawer
+          anchor="right"
+          open={drawerOpen}
+          onClose={toggleDrawer(false)}
+          PaperProps={{
+            sx: {
+              width: 280,
+              bgcolor: 'background.paper',
+              backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))',
+            }
+          }}
+        >
+          <Box
+            sx={{ width: 280 }}
+            role="presentation"
+            onClick={toggleDrawer(false)}
+            onKeyDown={toggleDrawer(false)}
+          >
+            {/* Drawer Header */}
+            <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                    }}
+                  >
+                    {/* <FavoriteIcon /> */}
+                  </Avatar>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                    LoveConnect
+                  </Typography>
+                </Box>
+                <IconButton
+                  onClick={toggleDrawer(false)}
+                  sx={{
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' },
+                  }}
+                  aria-label="close drawer"
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+              <Chip
+                icon={<FavoriteIcon fontSize="small" />}
+                label={`${onlineUsers.toLocaleString()} online`}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(233, 30, 99, 0.1)',
+                  color: 'primary.main',
+                  border: '1px solid',
+                  borderColor: 'primary.main',
+                }}
+              />
+            </Box>
+
+            {/* Menu Items */}
+            <List>
+              {menuItems.map((item, index) => (
+                <ListItem key={item.text} disablePadding>
+                  <ListItemButton
+                    component={item.link ? Link : 'a'}
+                    to={item.link}
+                    href={item.href}
+                    sx={{
+                      py: 2,
+                      '&:hover': {
+                        bgcolor: 'rgba(233, 30, 99, 0.1)',
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: 'primary.main', minWidth: 48 }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontWeight: 500,
+                        fontSize: '1rem',
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Social Links in Drawer */}
+            <Box sx={{ px: 3, pb: 3 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Follow Us
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                <IconButton
+                  color="primary"
+                  aria-label="Facebook"
+                  href="https://facebook.com"
+                  target="_blank"
+                  sx={{ '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' } }}
+                >
+                  <Facebook />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  aria-label="Twitter"
+                  href="https://twitter.com"
+                  target="_blank"
+                  sx={{ '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' } }}
+                >
+                  <Twitter />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  aria-label="Instagram"
+                  href="https://instagram.com"
+                  target="_blank"
+                  sx={{ '&:hover': { bgcolor: 'rgba(233, 30, 99, 0.1)' } }}
+                >
+                  <Instagram />
+                </IconButton>
+              </Box>
+            </Box>
+          </Box>
+        </Drawer>
+
         {/* Hero Section */}
         <Box
           sx={{
-            pt: 8,
-            pb: 6,
-            background:
-              "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
-            color: "white",
+            pt: { xs: 5, md: 8 },
+            pb: { xs: 4, md: 6 },
+            color: "text.primary",
           }}
         >
           <Container maxWidth="lg">
@@ -179,18 +447,22 @@ const LandingPage = () => {
                     fontWeight: 700,
                     lineHeight: 1.2,
                     mb: 3,
+                    fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.5rem' },
                   }}
                 >
-                  Connect with Strangers{" "}
-                  <span style={{ color: theme.palette.primary.main }}>
-                    Globally
+                  Connect with Kind{" "}
+                  <span
+                    style={{
+                      color: darkPinkLoveTheme.palette.primary.main,
+                    }}
+                  >
+                    Hearts
                   </span>
                 </Typography>
-                <Typography variant="h5" sx={{ mb: 4, opacity: 0.9 }}>
-                  Meet new people through video and text chat. No registration
-                  required.
+                <Typography variant="h5" sx={{ mb: 4, opacity: 0.9, fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
+                  Meet new people through video and text chat. Spread the love!
                 </Typography>
-                <Box sx={{ display: "flex", gap: 2 }}>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: 'wrap' }}>
                   <Link to="/connection">
                     <Button
                       variant="contained"
@@ -200,10 +472,15 @@ const LandingPage = () => {
                       sx={{
                         px: 4,
                         py: 1.5,
-                        borderRadius: 2,
+                        borderRadius: 50,
                         fontSize: "1.1rem",
                         textTransform: "none",
                         fontWeight: 600,
+                        boxShadow: "0 4px 15px rgba(233, 30, 99, 0.4)",
+                        "&:hover": {
+                          transform: "scale(1.05)",
+                        },
+                        width: { xs: '100%', sm: 'auto' },
                       }}
                     >
                       Start Chatting
@@ -214,13 +491,16 @@ const LandingPage = () => {
                     variant="outlined"
                     color="secondary"
                     size="large"
+                    component="a"
+                    href="#features"
                     sx={{
                       px: 4,
                       py: 1.5,
-                      borderRadius: 2,
+                      borderRadius: 50,
                       fontSize: "1.1rem",
                       textTransform: "none",
                       fontWeight: 600,
+                      width: { xs: '100%', sm: 'auto' },
                     }}
                   >
                     How It Works
@@ -228,121 +508,108 @@ const LandingPage = () => {
                 </Box>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Paper
-                  elevation={6}
+                <Box
                   sx={{
-                    p: 2,
-                    borderRadius: 4,
-                    bgcolor: "background.paper",
-                    overflow: "hidden",
+                    height: { xs: 250, md: 350 },
+                    backgroundImage:
+                      "url('https://media.tenor.com/ffG8ZgTeQ74AAAAj/peach-and-goma-cute.gif')",
+                    backgroundSize: "contain",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  <Box
-                    sx={{
-                      height: 300,
-                      backgroundImage:
-                        "url('https://your-image-url.com/cover.jpg')",
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      borderRadius: 3,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                    }}
-                  >
-                    {/* Optional content here */}
-                    <Typography variant="h4">Video Chat Preview</Typography>
-                  </Box>
-                </Paper>
+                  {/* Optional content here */}
+                </Box>
               </Grid>
             </Grid>
           </Container>
         </Box>
 
         {/* Features Section */}
-        <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Container id="features" maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
           <Typography
             variant="h3"
             align="center"
-            sx={{ mb: 6, fontWeight: 700 }}
+            sx={{ mb: { xs: 4, md: 6 }, fontWeight: 700, color: "primary.main", fontSize: { xs: '2rem', md: '3rem' } }}
           >
-            Why Choose Our Platform
+            Why You'll Love Our Platform
           </Typography>
           <Grid container spacing={4}>
             {[
               {
-                icon: <VideocamIcon fontSize="large" color="primary" />,
+                icon: VideocamIcon,
                 title: "Video Chat",
-                description:
-                  "High-quality video connections with people around the world.",
+                description: "High-quality video calls with people worldwide",
               },
               {
-                icon: <ChatIcon fontSize="large" color="primary" />,
+                icon: ChatIcon,
                 title: "Text Chat",
-                description:
-                  "Prefer typing? Our text chat is fast and reliable.",
+                description: "Real-time text messaging during your conversations",
               },
               {
-                icon: <PublicIcon fontSize="large" color="primary" />,
+                icon: PublicIcon,
                 title: "Global Reach",
-                description:
-                  "Connect with people from every corner of the planet.",
+                description: "Connect with users from around the globe",
               },
               {
-                icon: <SecurityIcon fontSize="large" color="primary" />,
+                icon: SecurityIcon,
                 title: "Safe & Secure",
-                description:
-                  "We prioritize your privacy and security in every chat.",
+                description: "Your privacy and security are our top priority",
               },
-            ].map((feature, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <Paper
-                  elevation={3}
-                  sx={{
-                    p: 4,
-                    height: "100%",
-                    borderRadius: 3,
-                    bgcolor: "background.paper",
-                    transition: "transform 0.3s",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                    },
-                  }}
-                >
-                  <Box
+            ].map((feature, index) => {
+              const IconComponent = feature.icon;
+              return (
+                <Grid item xs={12} sm={6} md={3} key={index}>
+                  <Paper
+                    elevation={3}
                     sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      textAlign: "center",
+                      p: 4,
+                      height: "100%",
+                      borderRadius: 3,
+                      bgcolor: "background.paper",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 20px rgba(233, 30, 99, 0.2)",
+                      },
                     }}
                   >
-                    <Avatar
+                    <Box
                       sx={{
-                        bgcolor: "primary.main",
-                        color: "white",
-                        width: 60,
-                        height: 60,
-                        mb: 3,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
                       }}
                     >
-                      {feature.icon}
-                    </Avatar>
-                    <Typography
-                      variant="h5"
-                      gutterBottom
-                      sx={{ fontWeight: 600 }}
-                    >
-                      {feature.title}
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      {feature.description}
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
-            ))}
+                      <Avatar
+                        sx={{
+                          bgcolor: "secondary.main",
+                          width: 70,
+                          height: 70,
+                          mb: 3,
+                        }}
+                      >
+                        <IconComponent sx={{ fontSize: 40, color: "white" }} />
+                      </Avatar>
+                      <Typography
+                        variant="h5"
+                        gutterBottom
+                        sx={{ fontWeight: 600, color: "text.primary" }}
+                      >
+                        {feature.title}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        {feature.description}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+              );
+            })}
           </Grid>
         </Container>
 
@@ -350,15 +617,15 @@ const LandingPage = () => {
         <Box
           sx={{
             py: 10,
-            bgcolor: "background.paper",
+            bgcolor: "background.paper", // Dark paper
             textAlign: "center",
           }}
         >
-          <Container maxWidth="md">
+          <Container id="cta" maxWidth="md">
             <Typography
               variant="h3"
               gutterBottom
-              sx={{ fontWeight: 700, mb: 3 }}
+              sx={{ fontWeight: 700, mb: 3, color: "primary.main", fontSize: { xs: '2rem', md: '3rem' } }}
             >
               Ready to Meet New People?
             </Typography>
@@ -374,10 +641,14 @@ const LandingPage = () => {
                 sx={{
                   px: 6,
                   py: 1.5,
-                  borderRadius: 2,
+                  borderRadius: 50,
                   fontSize: "1.1rem",
                   textTransform: "none",
                   fontWeight: 600,
+                  boxShadow: "0 4px 15px rgba(233, 30, 99, 0.4)",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                  },
                 }}
               >
                 Start Chatting Now
@@ -387,11 +658,11 @@ const LandingPage = () => {
         </Box>
 
         {/* Footer */}
-        <Box
+        <Box id="contact"
           sx={{
             py: 4,
-            bgcolor: "background.default",
-            borderTop: `1px solid ${theme.palette.divider}`,
+            bgcolor: "background.default", // Darkest background
+            borderTop: `1px solid ${darkPinkLoveTheme.palette.divider}`,
           }}
         >
           <Container maxWidth="lg">
@@ -402,8 +673,8 @@ const LandingPage = () => {
               alignItems="center"
             >
               <Grid item>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  StrangerConnect
+                <Typography variant="h6" sx={{ fontWeight: 700, color: "primary.main" }}>
+                  LoveConnect
                 </Typography>
                 <Typography
                   variant="body2"
@@ -415,13 +686,13 @@ const LandingPage = () => {
               </Grid>
               <Grid item>
                 <Box sx={{ display: "flex", gap: 2 }}>
-                  <IconButton aria-label="Facebook" color="primary">
+                  <IconButton component="a" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" color="primary">
                     <Facebook />
                   </IconButton>
-                  <IconButton aria-label="Twitter" color="primary">
+                  <IconButton component="a" href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" color="primary">
                     <Twitter />
                   </IconButton>
-                  <IconButton aria-label="Instagram" color="primary">
+                  <IconButton component="a" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" color="primary">
                     <Instagram />
                   </IconButton>
                 </Box>
@@ -436,41 +707,45 @@ const LandingPage = () => {
                     flexWrap: "wrap",
                   }}
                 >
-                  <Typography
+                  <Typography component="a" href="#" target="_blank" rel="noopener noreferrer"
                     variant="body2"
                     color="text.secondary"
                     sx={{
                       cursor: "pointer",
+                      textDecoration: 'none',
                       "&:hover": { color: "primary.main" },
                     }}
                   >
                     Privacy Policy
                   </Typography>
-                  <Typography
+                  <Typography component="a" href="#" target="_blank" rel="noopener noreferrer"
                     variant="body2"
                     color="text.secondary"
                     sx={{
                       cursor: "pointer",
+                      textDecoration: 'none',
                       "&:hover": { color: "primary.main" },
                     }}
                   >
                     Terms of Service
                   </Typography>
-                  <Typography
+                  <Typography component="a" href="#" target="_blank" rel="noopener noreferrer"
                     variant="body2"
                     color="text.secondary"
                     sx={{
                       cursor: "pointer",
+                      textDecoration: 'none',
                       "&:hover": { color: "primary.main" },
                     }}
                   >
                     Community Guidelines
                   </Typography>
-                  <Typography
+                  <Typography component="a" href="#contact"
                     variant="body2"
                     color="text.secondary"
                     sx={{
                       cursor: "pointer",
+                      textDecoration: 'none',
                       "&:hover": { color: "primary.main" },
                     }}
                   >

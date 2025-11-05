@@ -26,6 +26,10 @@ import {
   AccordionSummary,
   AccordionDetails,
   CircularProgress,
+  GlobalStyles,
+  AppBar,
+  Fade,
+  Slide,
 } from "@mui/material";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
@@ -40,6 +44,8 @@ import SkipNextIcon from "@mui/icons-material/SkipNext";
 import ChatIcon from "@mui/icons-material/Chat";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import HomeIcon from "@mui/icons-material/Home";
 
 import { Link } from "react-router-dom";
 import useWebRTC from "../hooks/useWebRTC";
@@ -48,29 +54,87 @@ import { useSelector, useDispatch } from "react-redux";
 import { addInterest, removeInterest } from "../modules/intrest/intrestSlice";
 
 const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
-// Reuse the same theme from landing page
-const darkTheme = createTheme({
+
+// CSS Animation for Floating Hearts
+const floatingHeartsAnimation = `
+  @keyframes floatHearts {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100vh);
+      opacity: 0;
+    }
+  }
+
+  .heart {
+    position: fixed;
+    bottom: -50px; 
+    font-size: 1.5rem;
+    color: rgba(233, 30, 99, 0.5); /* Pink with transparency */
+    animation: floatHearts linear infinite;
+    pointer-events: none; 
+    z-index: 9998; 
+  }
+`;
+
+// Floating Hearts Component
+const FloatingHearts = () => {
+  const isSmall = useMediaQuery('(max-width:600px)');
+  const heartsCount = isSmall ? 5 : 10;
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        pointerEvents: "none",
+        zIndex: 0,
+      }}
+    >
+      {[...Array(heartsCount)].map((_, i) => (
+        <FavoriteIcon
+          key={i}
+          className="heart"
+          sx={{
+            left: `${Math.random() * 100}vw`,
+            animationDuration: `${Math.random() * 5 + 5}s`,
+            animationDelay: `${Math.random() * 5}s`,
+            fontSize: `${Math.random() * 1.5 + 0.5}rem`,
+          }}
+        />
+      ))}
+    </Box>
+  );
+};
+
+// Dark Pink Love Theme matching LandingPage
+const darkPinkLoveTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#00bcd4",
+      main: "#E91E63", // Strong Pink
     },
     secondary: {
-      main: "#ff4081",
+      main: "#FF80AB", // Lighter Pink
     },
     background: {
       default: "#121212",
       paper: "#1e1e1e",
     },
+    text: {
+      primary: "#ffffff",
+      secondary: "#bbbbbb",
+    },
+  },
+  typography: {
+    fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif',
   },
 });
-
-// const userData = {
-//   username: generateUsername(),
-//   chatType: "video",
-//   interests: ["test"],
-//   country: "India",
-// };
 
 const ConnectionPage = () => {
   const theme = useTheme();
@@ -128,7 +192,7 @@ const ConnectionPage = () => {
     startCall(); // Implement this function to initiate new connection
 
     // Simulate connection after a brief delay (like real connection would take)
-    setTimeout(() => {}, 500);
+    setTimeout(() => { }, 500);
   };
 
   const handleSkip = async () => {
@@ -144,87 +208,99 @@ const ConnectionPage = () => {
     startCall(); // Implement this function to initiate new connection
   };
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={darkPinkLoveTheme}>
       <CssBaseline />
+      <GlobalStyles styles={floatingHeartsAnimation} />
+      <FloatingHearts />
       <Box
         sx={{
           minHeight: "100vh",
           bgcolor: "background.default",
           display: "flex",
           flexDirection: "column",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         {/* Header */}
-        <Container maxWidth="lg">
-          <Toolbar
-            disableGutters
-            sx={{ justifyContent: "space-between", py: 1 }}
-          >
-            {/* Left Side - Logo */}
-            <Link to="/">
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: theme.palette.primary.main,
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "1.2rem",
-                  }}
-                >
-                  SC
-                </Avatar>
-                <Typography
-                  variant="h6"
-                  noWrap
-                  component="div"
-                  sx={{
-                    fontWeight: 700,
-                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  StrangerConnect
-                </Typography>
-              </Box>
-            </Link>
 
-            {/* Right Side - Online Users */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Chip
-                //   icon={<PeopleIcon fontSize="small" />}
-                label={
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {/* {onlineUsers.toLocaleString()} online now */}
+        <AppBar
+          position="static"
+          color="transparent"
+          elevation={0}
+          sx={{
+            pt: 2,
+            px: { xs: 2, md: 4 },
+          }}
+        >
+          <Container maxWidth="lg" disableGutters>
+            <Toolbar sx={{ p: '0 !important', justifyContent: "space-between" }}>
+              {/* Left Side - Logo */}
+              <Link to="/" style={{ textDecoration: 'none' }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: "primary.main",
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "1.2rem",
+                    }}
+                  >
+                    <FavoriteIcon />
+                  </Avatar>
+                  <Typography
+                    variant="h6"
+                    noWrap
+                    component="div"
+                    sx={{
+                      fontWeight: 700,
+                      color: "primary.main",
+                      display: { sm: 'block' },
+                    }}
+                  >
+                    LoveConnect
                   </Typography>
-                }
-                sx={{
-                  bgcolor: theme.palette.primary.dark,
-                  color: "white",
-                  px: 1,
-                  "& .MuiChip-icon": { color: "white" },
-                }}
-              />
-              {/* <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                sx={{
-                  borderRadius: 2,
-                  px: 3,
-                  textTransform: "none",
-                  fontWeight: 600,
-                }}
-              >
-                Join Now
-              </Button> */}
-            </Box>
-          </Toolbar>
-        </Container>
+                </Box>
+              </Link>
 
-        {/* Main Content */}
+              <Box sx={{ flexGrow: 1 }} />
+
+              {/* Right Side - Status & Home Button */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Chip
+                  icon={<FavoriteIcon fontSize="small" sx={{ color: "primary.main" }} />}
+                  label={
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {status === "connected" ? "Connected ❤️" : status === "connecting" ? "Searching..." : "Ready"}
+                    </Typography>
+                  }
+                  sx={{
+                    bgcolor: "rgba(233, 30, 99, 0.1)",
+                    color: "primary.main",
+                    border: "1px solid",
+                    borderColor: "primary.main",
+                    px: 1,
+                    display: { sm: 'flex' },
+                  }}
+                />
+                <Tooltip title="Back to Home">
+                  <IconButton
+                    component={Link}
+                    to="/"
+                    sx={{
+                      color: "primary.main",
+                      "&:hover": { bgcolor: "rgba(233, 30, 99, 0.1)" },
+                    }}
+                  >
+                    <HomeIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Toolbar>
+          </Container>
+        </AppBar>        {/* Main Content */}
         <Container
           maxWidth="lg"
           sx={{
@@ -248,67 +324,62 @@ const ConnectionPage = () => {
           >
             {/* Video Container */}
             <Paper
-              elevation={3}
+              elevation={6}
               sx={{
                 flex: 1,
-                borderRadius: 2,
+                borderRadius: 4,
                 bgcolor: "background.paper",
                 position: "relative",
                 overflow: "hidden",
                 minHeight: isMobile ? "200px" : "400px",
+                border: status === "connected" ? "3px solid" : "1px solid",
+                borderColor: status === "connected" ? "primary.main" : "divider",
+                boxShadow: status === "connected"
+                  ? "0 8px 32px rgba(233, 30, 99, 0.3)"
+                  : "0 4px 16px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.3s ease",
               }}
             >
-              {/* Video Element */}
-
               {/* Peer Video */}
-              <Box
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  bgcolor: "background.default",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "1px solid black",
-                  visibility: status === "connected" ? "visible" : "hidden",
-                }}
-              >
+              <Fade in={status === "connected"} timeout={500}>
                 <Box
-                  component={"video"}
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  style={{
+                  sx={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "cover",
+                    bgcolor: "background.default",
+                    display: status === "connected" ? "flex" : "none",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                />
+                >
+                  <Box
+                    component={"video"}
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
+              </Fade>
 
-                {/* <Typography
-                    variant="h6"
-                    color="text.secondary"
-                    sx={{ display: status === "connecting" ? "block" : "none" }}
-                  >
-                    Peer Video Stream
-                  </Typography> */}
-
-                {/* In a real app, you would use: */}
-                {/* <video ref={peerVideoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> */}
-              </Box>
-
-              {/* My Video (Picture-in-picture) */}
+              {/* My Video (Always visible) */}
               <Box
                 sx={{
                   position: "absolute",
                   bottom: 16,
                   right: 16,
-                  width: isMobile ? "100px" : "150px",
-                  height: isMobile ? "75px" : "112px",
-                  borderRadius: 1,
+                  width: isMobile ? "100px" : "200px",
+                  height: isMobile ? "75px" : "150px",
+                  borderRadius: 2,
                   overflow: "hidden",
-                  border: `2px solid ${theme.palette.primary.main}`,
-                  visibility: status === "connected" ? "visible" : "hidden",
+                  border: `3px solid`,
+                  borderColor: "secondary.main",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                  zIndex: 10,
                 }}
               >
                 <Box
@@ -328,17 +399,11 @@ const ConnectionPage = () => {
                     playsInline
                     muted
                     style={{
-                      // display: status === "connected" ? "flex" : "none",
                       width: "100%",
                       height: "100%",
                       objectFit: "cover",
                     }}
                   />
-                  {/* <Typography variant="caption" color="text.secondary">
-                        My Video
-                      </Typography> */}
-                  {/* In a real app: */}
-                  {/* <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> */}
                 </Box>
               </Box>
 
@@ -357,20 +422,26 @@ const ConnectionPage = () => {
                     justifyContent: "center",
                     borderRadius: 1,
                     overflow: "hidden",
-                    border: `2px solid ${theme.palette.primary.main}`,
+                    // border: `2px solid ${theme.palette.primary.main}`,
                     visibility: status !== "connected" ? "visible" : "hidden",
                   }}
                 >
-                  <Avatar
+                  <Box
                     sx={{
-                      width: 80,
-                      height: 80,
-                      bgcolor: "primary.main",
-                      mb: 2,
+                      width: { xs: 250, md: 350 },
+                      height: { xs: 250, md: 350 },
+                      backgroundImage:
+                        "url('https://media.tenor.com/ffG8ZgTeQ74AAAAj/peach-and-goma-cute.gif')",
+                      backgroundSize: "contain",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <PersonIcon fontSize="large" />
-                  </Avatar>
+                    {/* Optional content here */}
+                  </Box>
                   <Typography variant="h6" align="center">
                     {{
                       idle: "Ready to meet someone new? Let’s find your vibe match 🔍",
@@ -399,40 +470,51 @@ const ConnectionPage = () => {
               )}
             </Paper>
             {/* Controls */}
-            <Box
+            <Paper
+              elevation={3}
               sx={{
                 display: "flex",
                 justifyContent: "center",
-                gap: 2,
-                py: 1,
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 1.5,
+                p: 2,
+                bgcolor: "background.paper",
+                borderRadius: 3,
               }}
             >
               <Tooltip title={isVideo ? "Turn off camera" : "Turn on camera"}>
                 <IconButton
-                  color={isVideo ? "primary" : "default"}
                   onClick={toggleVideo}
                   sx={{
-                    bgcolor: isVideo ? "primary.dark" : "background.paper",
+                    bgcolor: isVideo ? "primary.main" : "background.default",
+                    color: isVideo ? "white" : "text.secondary",
+                    width: { xs: 45, sm: 50 },
+                    height: { xs: 45, sm: 50 },
                     "&:hover": {
-                      bgcolor: isVideo ? "primary.dark" : "background.paper",
+                      bgcolor: isVideo ? "primary.dark" : "action.hover",
+                      transform: "scale(1.05)",
                     },
+                    transition: "all 0.2s",
                   }}
                 >
                   {isVideo ? <VideocamIcon /> : <VideocamOffIcon />}
                 </IconButton>
               </Tooltip>
 
-              <Tooltip
-                title={isAudio ? "Mute microphone" : "Unmute microphone"}
-              >
+              <Tooltip title={isAudio ? "Mute microphone" : "Unmute microphone"}>
                 <IconButton
-                  color={isAudio ? "primary" : "default"}
                   onClick={toggleAudio}
                   sx={{
-                    bgcolor: isAudio ? "primary.dark" : "background.paper",
+                    bgcolor: isAudio ? "primary.main" : "background.default",
+                    color: isAudio ? "white" : "text.secondary",
+                    width: { xs: 45, sm: 50 },
+                    height: { xs: 45, sm: 50 },
                     "&:hover": {
-                      bgcolor: isAudio ? "primary.dark" : "background.paper",
+                      bgcolor: isAudio ? "primary.dark" : "action.hover",
+                      transform: "scale(1.05)",
                     },
+                    transition: "all 0.2s",
                   }}
                 >
                   {isAudio ? <MicIcon /> : <MicOffIcon />}
@@ -444,9 +526,20 @@ const ConnectionPage = () => {
                 color="secondary"
                 startIcon={<InterestsIcon />}
                 onClick={() => setOpenInterestsDialog(true)}
-                sx={{ textTransform: "none" }}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 3,
+                  px: { xs: 2, sm: 3 },
+                  fontWeight: 600,
+                  boxShadow: "0 4px 12px rgba(255, 128, 171, 0.3)",
+                  "&:hover": {
+                    boxShadow: "0 6px 16px rgba(255, 128, 171, 0.4)",
+                    transform: "translateY(-2px)",
+                  },
+                  transition: "all 0.2s",
+                }}
               >
-                {isMobile ? "" : "My Interests"}
+                {isMobile ? "Interests" : "My Interests"}
               </Button>
 
               {status === "connected" && (
@@ -456,39 +549,78 @@ const ConnectionPage = () => {
                     color="secondary"
                     startIcon={<SkipNextIcon />}
                     onClick={handleSkip}
-                    sx={{ textTransform: "none" }}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 3,
+                      px: { xs: 2, sm: 3 },
+                      fontWeight: 600,
+                      borderWidth: 2,
+                      "&:hover": {
+                        borderWidth: 2,
+                        transform: "translateY(-2px)",
+                      },
+                      transition: "all 0.2s",
+                    }}
                   >
-                    {isMobile ? "" : "Skip"}
+                    {isMobile ? "Skip" : "Next Person"}
                   </Button>
                   <Button
                     variant="outlined"
                     color="error"
                     startIcon={<PersonOffIcon />}
                     onClick={handleDisconnect}
-                    sx={{ textTransform: "none" }}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 3,
+                      px: { xs: 2, sm: 3 },
+                      fontWeight: 600,
+                      borderWidth: 2,
+                      "&:hover": {
+                        borderWidth: 2,
+                        bgcolor: "error.dark",
+                        color: "white",
+                        transform: "translateY(-2px)",
+                      },
+                      transition: "all 0.2s",
+                    }}
                   >
-                    {isMobile ? "" : "Disconnect"}
+                    {isMobile ? "End" : "Disconnect"}
                   </Button>
                 </>
               )}
               {status !== "connected" && (
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="primary"
+                  size="large"
                   startIcon={
                     status === "connecting" ? (
-                      <CircularProgress size={20} />
+                      <CircularProgress size={20} sx={{ color: "white" }} />
                     ) : (
                       <PersonAddAltIcon />
                     )
                   }
                   onClick={handleConnect}
-                  sx={{ textTransform: "none" }}
+                  disabled={status === "connecting"}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 3,
+                    px: { xs: 3, sm: 4 },
+                    py: 1.5,
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    boxShadow: "0 4px 15px rgba(233, 30, 99, 0.4)",
+                    "&:hover": {
+                      boxShadow: "0 6px 20px rgba(233, 30, 99, 0.5)",
+                      transform: "translateY(-2px)",
+                    },
+                    transition: "all 0.2s",
+                  }}
                 >
-                  {isMobile ? "" : "Connect"}
+                  {status === "connecting" ? "Connecting..." : "Start Connection"}
                 </Button>
               )}
-            </Box>
+            </Paper>
           </Box>
 
           {/* Chat/Info Area */}
@@ -505,97 +637,125 @@ const ConnectionPage = () => {
           >
             {/* Peer Info Card */}
             {status === "connected" && partnerInfo && (
-              <Accordion
-                defaultExpanded
-                sx={{
-                  "&.MuiAccordion-root": {
-                    backgroundColor: "background.paper",
-                    borderRadius: "16px !important",
-                    overflow: "hidden",
-                  },
-                }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography
-                    variant="h6"
-                    sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              <Fade in={true} timeout={800}>
+                <Accordion
+                  defaultExpanded
+                  sx={{
+                    "&.MuiAccordion-root": {
+                      backgroundColor: "background.paper",
+                      borderRadius: "16px !important",
+                      overflow: "hidden",
+                      border: "2px solid",
+                      borderColor: "primary.main",
+                      boxShadow: "0 4px 16px rgba(233, 30, 99, 0.2)",
+                    },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}
+                    sx={{
+                      bgcolor: "rgba(233, 30, 99, 0.1)",
+                    }}
                   >
-                    <PersonIcon color="primary" />
-                    About Your Connection
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={1} sx={{ mb: 2 }}>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Username:
-                      </Typography>
-                      <Typography>{partnerInfo?.username}</Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        fontWeight: 600,
+                      }}
+                    >
+                      <FavoriteIcon color="primary" />
+                      Your Connection
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      <Grid item xs={12}>
+                        <Typography variant="body2" color="text.secondary">
+                          Username:
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: "primary.main" }}>
+                          {partnerInfo?.username}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="body2" color="text.secondary">
+                          From:
+                        </Typography>
+                        <Typography variant="body1">
+                          {partnerInfo?.country || "Unknown"}
+                        </Typography>
+                      </Grid>
                     </Grid>
-                    {/* <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Age:
-                      </Typography>
-                      <Typography>{partnerInfo?.age}</Typography>
-                    </Grid> */}
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        From:
-                      </Typography>
-                      <Typography>{partnerInfo?.country}</Typography>
-                    </Grid>
-                    {/* <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Gender:
-                      </Typography>
-                      <Typography>{partnerInfo?.gender}</Typography>
-                    </Grid> */}
-                  </Grid>
-                  <Divider sx={{ my: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Interests:
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}
-                  >
-                    {partnerInfo?.interests.map((interest, index) => (
-                      <Chip
-                        key={index}
-                        label={interest}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Shared Interests:
+                    </Typography>
+                    <Box
+                      sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}
+                    >
+                      {partnerInfo?.interests?.length > 0 ? (
+                        partnerInfo.interests.map((interest, index) => (
+                          <Chip
+                            key={index}
+                            label={interest}
+                            size="small"
+                            sx={{
+                              bgcolor: "primary.main",
+                              color: "white",
+                              fontWeight: 500,
+                            }}
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No interests shared
+                        </Typography>
+                      )}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              </Fade>
             )}
 
             {/* Chat Box */}
             <Paper
-              elevation={3}
+              elevation={4}
               sx={{
                 flex: 1,
-                borderRadius: 2,
+                borderRadius: 3,
                 bgcolor: "background.paper",
                 display: "flex",
                 flexDirection: "column",
                 minHeight: isMobile ? "300px" : 0,
-                maxHeight: isMobile ? "400px" : "100%",
+                maxHeight: isMobile ? "500px" : "100%",
                 overflow: "hidden",
+                border: "1px solid",
+                borderColor: "divider",
               }}
             >
               <Box
                 sx={{
                   p: 2,
-                  borderBottom: `1px solid ${theme.palette.divider}`,
+                  borderBottom: `2px solid`,
+                  borderColor: "divider",
                   display: "flex",
                   alignItems: "center",
+                  bgcolor: "rgba(233, 30, 99, 0.05)",
                 }}
               >
                 <ChatIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1">Chat</Typography> - {status}
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Chat
+                </Typography>
+                <Chip
+                  label={status}
+                  size="small"
+                  color={status === "connected" ? "success" : "default"}
+                  sx={{ ml: "auto", fontWeight: 500 }}
+                />
               </Box>
 
               {/* Messages */}
@@ -608,48 +768,65 @@ const ConnectionPage = () => {
                   display: "flex",
                   flexDirection: "column",
                   gap: 1.5,
+                  bgcolor: "background.default",
+                  "&::-webkit-scrollbar": {
+                    width: "8px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    bgcolor: "background.default",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor: "primary.main",
+                    borderRadius: "4px",
+                  },
                 }}
               >
                 {messages.length > 0 ? (
                   messages.map((msg, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        alignSelf:
-                          msg.sender === "You" ? "flex-end" : "flex-start",
-                        maxWidth: "80%",
-                      }}
-                    >
-                      <Paper
-                        elevation={1}
+                    <Fade in={true} key={index} timeout={300}>
+                      <Box
                         sx={{
-                          p: 1.5,
-                          bgcolor:
-                            msg.sender === "You"
-                              ? "primary.dark"
-                              : "background.default",
-                          borderRadius: 2,
-                          borderTopLeftRadius: msg.sender === "You" ? 2 : 0,
-                          borderTopRightRadius: msg.sender === "You" ? 0 : 2,
+                          alignSelf:
+                            msg.sender === "You" ? "flex-end" : "flex-start",
+                          maxWidth: "80%",
                         }}
                       >
-                        <Typography>{msg.text}</Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
+                        <Paper
+                          elevation={2}
                           sx={{
-                            display: "block",
-                            textAlign: msg.sender === "You" ? "right" : "left",
-                            mt: 0.5,
+                            p: 1.5,
+                            bgcolor:
+                              msg.sender === "You"
+                                ? "primary.main"
+                                : "background.paper",
+                            color:
+                              msg.sender === "You"
+                                ? "white"
+                                : "text.primary",
+                            borderRadius: 2,
+                            borderTopLeftRadius: msg.sender === "You" ? 2 : 0,
+                            borderTopRightRadius: msg.sender === "You" ? 0 : 2,
+                            wordBreak: "break-word",
                           }}
                         >
-                          {msg?.timestamp?.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </Typography>
-                      </Paper>
-                    </Box>
+                          <Typography variant="body1">{msg.text}</Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: "block",
+                              textAlign: msg.sender === "You" ? "right" : "left",
+                              mt: 0.5,
+                              opacity: 0.7,
+                            }}
+                          >
+                            {msg?.timestamp?.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                    </Fade>
                   ))
                 ) : (
                   <Box
@@ -662,11 +839,14 @@ const ConnectionPage = () => {
                       p: 3,
                     }}
                   >
-                    <Typography variant="body2" color="text.secondary">
-                      {status === "connected"
-                        ? "Say hello to your new connection!"
-                        : "You'll be able to chat once connected"}
-                    </Typography>
+                    <Box>
+                      <ChatIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
+                      <Typography variant="body1" color="text.secondary">
+                        {status === "connected"
+                          ? "Say hello to start the conversation! 👋"
+                          : "Messages will appear here once connected"}
+                      </Typography>
+                    </Box>
                   </Box>
                 )}
               </Box>
@@ -675,9 +855,11 @@ const ConnectionPage = () => {
               <Box
                 sx={{
                   p: 2,
-                  borderTop: `1px solid ${theme.palette.divider}`,
+                  borderTop: `2px solid`,
+                  borderColor: "divider",
                   display: "flex",
                   gap: 1,
+                  bgcolor: "background.paper",
                 }}
               >
                 <TextField
@@ -685,15 +867,40 @@ const ConnectionPage = () => {
                   fullWidth
                   variant="outlined"
                   size="small"
-                  placeholder="Type a message..."
+                  placeholder={
+                    status === "connected"
+                      ? "Type a message..."
+                      : "Connect to start chatting"
+                  }
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      "&:hover fieldset": {
+                        borderColor: "primary.main",
+                      },
+                    },
+                  }}
                 />
                 <IconButton
                   color="primary"
                   onClick={handleSendMessage}
                   disabled={!message.trim() || status !== "connected"}
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "white",
+                    "&:hover": {
+                      bgcolor: "primary.dark",
+                      transform: "scale(1.05)",
+                    },
+                    "&:disabled": {
+                      bgcolor: "action.disabledBackground",
+                      color: "action.disabled",
+                    },
+                    transition: "all 0.2s",
+                  }}
                 >
                   <SendIcon />
                 </IconButton>
@@ -709,14 +916,30 @@ const ConnectionPage = () => {
         onClose={() => setOpenInterestsDialog(false)}
         fullWidth
         maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            bgcolor: "background.paper",
+          },
+        }}
       >
-        <DialogTitle sx={{ display: "flex", alignItems: "center" }}>
-          <InterestsIcon sx={{ mr: 1 }} />
-          My Interests
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "rgba(233, 30, 99, 0.1)",
+            borderBottom: "2px solid",
+            borderColor: "primary.main",
+          }}
+        >
+          <FavoriteIcon sx={{ mr: 1, color: "primary.main" }} />
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            My Interests
+          </Typography>
         </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Add or update your interests to match with like-minded people
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
+            Add interests to match with like-minded people ❤️
           </Typography>
 
           <Box sx={{ display: "flex", gap: 1, mb: 3 }}>
@@ -724,18 +947,37 @@ const ConnectionPage = () => {
               fullWidth
               variant="outlined"
               size="small"
-              placeholder="Add new interest..."
+              placeholder="E.g., Music, Movies, Gaming..."
               value={newInterest}
               onChange={(e) => setNewInterest(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && newInterest.trim()) {
+                  dispatch(addInterest(newInterest.trim()));
+                  setNewInterest("");
+                }
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                },
+              }}
             />
             <Button
               variant="contained"
               onClick={() => {
-                dispatch(addInterest(newInterest.trim()));
-                setNewInterest("");
+                if (newInterest.trim()) {
+                  dispatch(addInterest(newInterest.trim()));
+                  setNewInterest("");
+                }
               }}
               disabled={!newInterest.trim()}
               startIcon={<AddIcon />}
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                px: 3,
+              }}
             >
               Add
             </Button>
@@ -743,34 +985,61 @@ const ConnectionPage = () => {
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
             Your Current Interests:
           </Typography>
 
-          {userData?.interests.length > 0 ? (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {userData?.interests.map((interest, index) => (
+          {userData?.interests && userData.interests.length > 0 ? (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
+              {userData.interests.map((interest, index) => (
                 <Chip
                   key={index}
                   label={interest}
                   onDelete={() => dispatch(removeInterest(interest))}
-                  color="primary"
-                  sx={{ mb: 1 }}
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "white",
+                    fontWeight: 500,
+                    "& .MuiChip-deleteIcon": {
+                      color: "white",
+                      "&:hover": {
+                        color: "error.light",
+                      },
+                    },
+                  }}
                 />
               ))}
             </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary">
-              No interests added yet
-            </Typography>
+            <Box
+              sx={{
+                p: 3,
+                textAlign: "center",
+                border: "2px dashed",
+                borderColor: "divider",
+                borderRadius: 2,
+                mt: 2,
+              }}
+            >
+              <InterestsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                No interests added yet. Add some to find better matches!
+              </Typography>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2 }}>
           <Button
             onClick={() => setOpenInterestsDialog(false)}
-            sx={{ textTransform: "none" }}
+            variant="contained"
+            sx={{
+              textTransform: "none",
+              borderRadius: 2,
+              px: 3,
+              fontWeight: 600,
+            }}
           >
-            Close
+            Done
           </Button>
         </DialogActions>
       </Dialog>
