@@ -37,7 +37,7 @@ import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import SendIcon from "@mui/icons-material/Send";
 import AddIcon from "@mui/icons-material/Add";
-import PersonIcon from "@mui/icons-material/Person";
+// import PersonIcon from "@mui/icons-material/Person";
 import InterestsIcon from "@mui/icons-material/Interests";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
@@ -49,92 +49,13 @@ import HomeIcon from "@mui/icons-material/Home";
 
 import { Link } from "react-router-dom";
 import useWebRTC from "../hooks/useWebRTC";
-import { generateUsername } from "../utils/randomUserNameGenerator";
+// import { generateUsername } from "../utils/randomUserNameGenerator";
 import { useSelector, useDispatch } from "react-redux";
 import { addInterest, removeInterest } from "../modules/intrest/intrestSlice";
+import FloatingHearts from "../components/FloatingHearts";
+import darkPinkLoveTheme from "../utils/theme";
 
 const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
-
-// CSS Animation for Floating Hearts
-const floatingHeartsAnimation = `
-  @keyframes floatHearts {
-    0% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(-100vh);
-      opacity: 0;
-    }
-  }
-
-  .heart {
-    position: fixed;
-    bottom: -50px; 
-    font-size: 1.5rem;
-    color: rgba(233, 30, 99, 0.5); /* Pink with transparency */
-    animation: floatHearts linear infinite;
-    pointer-events: none; 
-    z-index: 9998; 
-  }
-`;
-
-// Floating Hearts Component
-const FloatingHearts = () => {
-  const isSmall = useMediaQuery('(max-width:600px)');
-  const heartsCount = isSmall ? 5 : 10;
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        pointerEvents: "none",
-        zIndex: 0,
-      }}
-    >
-      {[...Array(heartsCount)].map((_, i) => (
-        <FavoriteIcon
-          key={i}
-          className="heart"
-          sx={{
-            left: `${Math.random() * 100}vw`,
-            animationDuration: `${Math.random() * 5 + 5}s`,
-            animationDelay: `${Math.random() * 5}s`,
-            fontSize: `${Math.random() * 1.5 + 0.5}rem`,
-          }}
-        />
-      ))}
-    </Box>
-  );
-};
-
-// Dark Pink Love Theme matching LandingPage
-const darkPinkLoveTheme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#E91E63", // Strong Pink
-    },
-    secondary: {
-      main: "#FF80AB", // Lighter Pink
-    },
-    background: {
-      default: "#121212",
-      paper: "#1e1e1e",
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#bbbbbb",
-    },
-  },
-  // typography: {
-  //   fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif',
-  // },
-});
 
 const ConnectionPage = () => {
   const theme = useTheme();
@@ -160,6 +81,7 @@ const ConnectionPage = () => {
     toggleVideo,
     isAudio,
     isVideo,
+    onlineUsers
   } = useWebRTC(SOCKET_SERVER, userData);
 
   // Auto-scroll chat to bottom when new messages arrive
@@ -189,7 +111,7 @@ const ConnectionPage = () => {
 
   // handle Connect
   const handleConnect = () => {
-    if (status === "connecting") {
+    if (status === "matching" || status === "matched") {
       endCall();
       return;
     }
@@ -214,7 +136,7 @@ const ConnectionPage = () => {
   return (
     <ThemeProvider theme={darkPinkLoveTheme}>
       <CssBaseline />
-      <GlobalStyles styles={floatingHeartsAnimation} />
+      {/* <GlobalStyles styles={floatingHeartsAnimation} /> */}
       <FloatingHearts />
       <Box
         sx={{
@@ -273,22 +195,44 @@ const ConnectionPage = () => {
 
               {/* Right Side - Status & Home Button */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Chip
-                  icon={<FavoriteIcon fontSize="small" sx={{ color: "primary.main" }} />}
-                  label={
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {status === "connected" ? "Connected ❤️" : status === "connecting" ? "Searching..." : "Ready"}
-                    </Typography>
-                  }
-                  sx={{
-                    bgcolor: "rgba(233, 30, 99, 0.1)",
+                {onlineUsers > 0 ? (
+                  <Chip
+                    icon={<FavoriteIcon fontSize="small" sx={{ color: "primary.main" }} />}
+                    label={
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {/* {{
+                        idle: "Ready",
+                        connecting: "Searching...",
+                        matched: "Found someone!",
+                        connected: "Connected ❤️",
+                        "socket-disconnected": "Disconnected",
+                        "peer-disconnected": "Disconnected",
+                        "socket-error": "Error",
+                        "peer-error": "Error",
+                      }[status] || "Ready"} */}
+                        {onlineUsers} user{onlineUsers !== 1 ? "s" : ""} online
+                      </Typography>
+                    }
+                    sx={{
+                      bgcolor: "rgba(233, 30, 99, 0.1)",
+                      color: "primary.main",
+                      border: "1px solid",
+                      borderColor: "primary.main",
+                      px: 1,
+                      display: { sm: 'flex' },
+                    }}
+                  />
+                ) : (
+                  <Chip label="Connecting..." sx={{
+                    bgcolor: "rgba(95, 11, 39, 0.1)",
                     color: "primary.main",
                     border: "1px solid",
                     borderColor: "primary.main",
                     px: 1,
                     display: { sm: 'flex' },
-                  }}
-                />
+                  }} />
+                )}
+
                 <Tooltip title="Back to Home">
                   <IconButton
                     component={Link}
@@ -450,9 +394,13 @@ const ConnectionPage = () => {
                     {{
                       idle: "Ready to meet someone new? Let’s find your vibe match 🔍",
                       connecting: "Looking for someone to connect with...",
+                      matched: "Connecting to your match...",
                       connected: "Boom! You’re now connected 🎉",
-                      disconnected: "The other person has left the chat 😔",
-                    }[status] || "Status unknown"}
+                      "peer-disconnected": "Your match has left the chat 😔",
+                      "socket-disconnected": "You've been disconnected. Check your internet.",
+                      "peer-error": "A connection error occurred.",
+                      "socket-error": "Could not connect to the server.",
+                    }[status] || "Server sleep refresh and wait a while"}
                   </Typography>
 
                   <Typography
@@ -465,9 +413,13 @@ const ConnectionPage = () => {
                       connecting: `We're finding someone who shares your interests: ${userData?.interests.join(
                         ", "
                       )}`,
+                      matched: "Getting things ready for your chat!",
                       connected: "Say hi and see where the convo takes you 👋",
-                      disconnected:
+                      "peer-disconnected":
                         "Wanna try connecting with someone else? 🔁",
+                      "socket-disconnected": "Please refresh or try connecting again.",
+                      "peer-error": "Please try connecting again.",
+                      "socket-error": "Please try again in a moment.",
                     }[status] || ""}
                   </Typography>
                 </Box>
@@ -596,10 +548,10 @@ const ConnectionPage = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  size="large"
+                  size="medium"
                   startIcon={
-                    status === "connecting" ? (
-                      <CircularProgress size={20} sx={{ color: "white" }} />
+                    status === "matching" || status === "matched" ? (
+                      <CircularProgress size={16} sx={{ color: "white" }} />
                     ) : (
                       <PersonAddAltIcon />
                     )
@@ -609,19 +561,17 @@ const ConnectionPage = () => {
                   sx={{
                     textTransform: "none",
                     borderRadius: 3,
-                    px: { xs: 3, sm: 4 },
-                    py: 1.5,
+                    px: { xs: 2, sm: 3 },
                     fontWeight: 600,
-                    fontSize: "1rem",
-                    boxShadow: "0 4px 15px rgba(233, 30, 99, 0.4)",
+                    borderWidth: 2,
                     "&:hover": {
-                      boxShadow: "0 6px 20px rgba(233, 30, 99, 0.5)",
+                      borderWidth: 2,
                       transform: "translateY(-2px)",
                     },
                     transition: "all 0.2s",
                   }}
                 >
-                  {status === "connecting" ? "Stop" : "Start Connection"}
+                  {status === "matching" || status === "matched" ? "Stop" : "Start Connection"}
                 </Button>
               )}
             </Paper>
@@ -755,7 +705,7 @@ const ConnectionPage = () => {
                   Chat
                 </Typography>
                 <Chip
-                  label={status}
+                  label={status.includes("error") ? "Error" : status}
                   size="small"
                   color={status === "connected" ? "success" : "default"}
                   sx={{ ml: "auto", fontWeight: 500 }}

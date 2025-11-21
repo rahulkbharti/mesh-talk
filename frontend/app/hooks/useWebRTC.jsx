@@ -21,14 +21,15 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
   const [dataChannel, setDataChannel] = useState(null);
 
   const localStream = useMedia();
-  const [status, setStatus] = useState("idle"); // 'idle', 'connecting', 'matched', 'connected', 'disconnected', 'error'
+  const [status, setStatus] = useState("idle"); // 'idle', 'connecting', 'matched', 'connected', 'socket-disconnected', 'peer-disconnected', 'socket-error', 'peer-error'
+  const [onlineUsers, setOnlineUsers] = useState(0);
   const [message, setMessage] = useState([]);
 
   const [isVideo, setIsVideo] = useState(true);
   const [isAudio, setIsAudio] = useState(true);
 
   const updateStatus = (newStatus) => {
-    if (status === "idle" && newStatus === "disconnected") return;
+    if (status === "idle" && newStatus.includes("disconnected")) return;
     console.log(`Status changed from ${status} to ${newStatus}`);
     setStatus(newStatus);
   };
@@ -55,12 +56,12 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     };
     channel.onclose = () => {
       setDataChannel(null);
-      updateStatus("disconnected");
+      updateStatus("peer-disconnected");
       console.log("Channel Closed");
     };
     channel.onerror = (error) => {
       setDataChannel(null);
-      updateStatus("disconnected");
+      updateStatus("peer-error");
       console.log("Channel Error:", error);
     };
   };
@@ -74,23 +75,26 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
 
     socket.connect(); // Connect manually
     socket.on("connect", () => {
+
       console.log("Socket Connected:", socket.id);
       updateStatus("idle");
     });
-
+    socket.on("onlineUsers", (count) => {
+      setOnlineUsers(count?.totalConnected ?? 0);
+    });
     socket.on("disconnect", () => {
-      updateStatus("disconnected");
+      updateStatus("socket-disconnected");
     });
 
     socket.on("connect_error", () => {
-      updateStatus("error");
+      updateStatus("socket-error");
     });
 
     return () => {
       console.log("Socket Cleanup...");
       socket.disconnect(); // Disconnect on unmount
       peerData.current = null;
-      updateStatus("disconnected");
+      updateStatus("socket-disconnected");
     };
   }, [serverUrl]); // Runs only when `serverUrl` changes
 
@@ -140,7 +144,7 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     const handleHangUp = () => {
       console.log("Received HangUp");
       endCall(false);
-      updateStatus("disconnected");
+      updateStatus("peer-disconnected");
     };
     socket.on("offer", handleOffer);
     socket.on("answer", handleAnswer);
@@ -188,13 +192,13 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
           updateStatus("connected");
           break;
         case "disconnected":
-          updateStatus("disconnected");
+          updateStatus("peer-disconnected");
           break;
         case "failed":
-          updateStatus("error");
+          updateStatus("peer-error");
           break;
         case "closed":
-          updateStatus("disconnected");
+          updateStatus("peer-disconnected");
           break;
         default:
           break;
@@ -252,11 +256,11 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
   const startCall = () => {
     if (!localStream || !socket) {
       console.error("Local stream not available at startCall()");
-      updateStatus("error");
+      updateStatus("peer-error");
       return;
     }
     console.log("Searching For partner:", userData);
-    updateStatus("connecting");
+    updateStatus("matching");
     socket.emit("match", userData);
     localVideoRef.current.srcObject = localStream;
   };
@@ -303,6 +307,7 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     toggleAudio,
     isAudio,
     isVideo,
+    onlineUsers
   };
 };
 

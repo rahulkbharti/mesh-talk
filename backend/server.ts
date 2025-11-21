@@ -31,6 +31,14 @@ let connectionCounter: number = 0;
 type SocketEventHandler = (socket: Socket, args: any[]) => void;
 type SocketEventHandlers = Record<string, SocketEventHandler>;
 
+// Broadcast online user count to all connected clients
+function broadcastOnlineCount() {
+  io.emit("onlineUsers", {
+    totalConnected: io.of("/").sockets.size,
+    availableCount: onlineUsers.size,
+  });
+}
+
 // Dummy user registration handler for demonstration
 async function handleUserRegistration(socket: Socket, args: any[]) {
   const userData: UserData = args[0];
@@ -148,7 +156,7 @@ const socketEventHandlers: SocketEventHandlers = {
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
-
+  broadcastOnlineCount();
   // Set up all event listeners
   for (const [event, handler] of Object.entries(socketEventHandlers)) {
     socket.on(event, (...args) => handler(socket, args));
@@ -157,7 +165,30 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
     onlineUsers.delete(socket.id);
+    broadcastOnlineCount();
   });
+});
+
+// REST API to inspect availability/online stats
+app.get("/api/online-users", (_req, res) => {
+  const users = Array.from(onlineUsers.values()).map(
+    ({ id, username, interests, chatType }) => ({
+      id,
+      username,
+      interests,
+      chatType,
+    })
+  );
+
+  res.json({
+    totalConnected: io.of("/").sockets.size,
+    availableCount: onlineUsers.size,
+    users,
+  });
+});
+
+app.get("/", (_req, res) => {
+  res.status(200).json({ message: "Backend Running" });
 });
 
 server.listen(PORT, () => {

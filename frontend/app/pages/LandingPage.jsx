@@ -24,6 +24,7 @@ import {
   ListItemIcon,
   ListItemText,
   useMediaQuery,
+  TextField,
 } from "@mui/material";
 import {
   Videocam as VideocamIcon,
@@ -42,102 +43,17 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import darkPinkLoveTheme from "../utils/theme";
+import FloatingHearts from "../components/FloatingHearts";
+import { io } from "socket.io-client";
 
-// --- CSS Animation for Floating Hearts ---
-const floatingHeartsAnimation = `
-  @keyframes floatHearts {
-    0% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(-100vh);
-      opacity: 0;
-    }
-  }
+const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
 
-  .heart {
-    position: fixed;
-    bottom: -50px; 
-    font-size: 1.5rem;
-    color: rgba(233, 30, 99, 0.5); /* Pink with transparency */
-    animation: floatHearts linear infinite;
-    pointer-events: none; 
-    z-index: 9998; 
-  }
-`;
-
-// --- Floating Hearts Component ---
-const FloatingHearts = () => {
-  const isSmall = useMediaQuery('(max-width:600px)');
-  const heartsCount = isSmall ? 8 : 15;
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        pointerEvents: "none",
-        zIndex: 9998,
-      }}
-    >
-      {[...Array(heartsCount)].map((_, i) => (
-        <FavoriteIcon
-          key={i}
-          className="heart"
-          sx={{
-            left: `${Math.random() * 100}vw`,
-            animationDuration: `${Math.random() * 5 + 5}s`,
-            animationDelay: `${Math.random() * 5}s`,
-            fontSize: `${Math.random() * 1.5 + 0.5}rem`,
-          }}
-        />
-      ))}
-    </Box>
-  );
-};
-
-// --- Create a Dark Pink Love Theme ---
-const darkPinkLoveTheme = createTheme({
-  palette: {
-    mode: "dark", // Dark theme
-    primary: {
-      main: "#E91E63", // Strong Pink
-    },
-    secondary: {
-      main: "#FF80AB", // Lighter Pink
-    },
-    background: {
-      default: "#121212", // Standard Dark Background
-      paper: "#1e1e1e", // Softer Dark for Cards
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#bbbbbb",
-    },
-  },
-  typography: {
-    // fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif', // Playful font
-    h1: {
-      fontWeight: 700,
-      fontSize: "3.5rem",
-      color: "#ffffff", // White heading for dark theme
-    },
-    h4: {
-      fontWeight: 600,
-      color: "#f0f0f0",
-    },
-  },
-});
 
 const LandingPage = () => {
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const isXs = useMediaQuery('(max-width:600px)');
-
+  // const isXs = useMediaQuery('(max-width:600px)');
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
@@ -154,23 +70,23 @@ const LandingPage = () => {
 
   // Simulate live user count
   useEffect(() => {
-    const initialCount = Math.floor(Math.random() * 5000) + 1000;
-    setOnlineUsers(initialCount);
-
-    const interval = setInterval(() => {
-      setOnlineUsers((prev) => {
-        const change = Math.floor(Math.random() * 10) - 3;
-        return Math.max(1000, prev + change); // Ensure never goes below 1000
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
+    const socket = io(SOCKET_SERVER, { autoConnect: false });
+    socket.connect();
+    socket.on("connect", () => {
+      console.log("Socket Connected:", socket.id);
+    });
+    socket.on("onlineUsers", (count) => {
+      setOnlineUsers(count?.totalConnected ?? 0);
+    });
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   return (
     <ThemeProvider theme={darkPinkLoveTheme}>
       <CssBaseline />
-      <GlobalStyles styles={floatingHeartsAnimation} />
+      {/* <GlobalStyles styles={floatingHeartsAnimation} /> */}
       <FloatingHearts />
       <Box
         sx={{
@@ -264,22 +180,34 @@ const LandingPage = () => {
 
               {/* Right Side - Online Users & Menu Button */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Chip
-                  icon={<FavoriteIcon fontSize="small" sx={{ color: "primary.main" }} />}
-                  label={
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {onlineUsers.toLocaleString()} online
-                    </Typography>
-                  }
-                  sx={{
+                {onlineUsers > 0 ? (
+                  <Chip
+                    icon={<FavoriteIcon fontSize="small" sx={{ color: "primary.main" }} />}
+                    label={
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {onlineUsers.toLocaleString()} online
+                      </Typography>
+                    }
+                    sx={{
+                      bgcolor: "rgba(233, 30, 99, 0.1)",
+                      color: "primary.main",
+                      border: "1px solid",
+                      borderColor: "primary.main",
+                      px: 1,
+                      display: { sm: 'flex' },
+                    }}
+                  />
+                ) : (
+                  <Chip label="Connecting..." sx={{
                     bgcolor: "rgba(233, 30, 99, 0.1)",
                     color: "primary.main",
                     border: "1px solid",
                     borderColor: "primary.main",
                     px: 1,
                     display: { sm: 'flex' },
-                  }}
-                />
+                  }} />
+                )}
+
                 {/* Mobile Menu Icon */}
                 <IconButton
                   aria-label="menu"
@@ -492,7 +420,7 @@ const LandingPage = () => {
                     color="secondary"
                     size="large"
                     component="a"
-                    href="#features"
+                    href="#how-it-works"
                     sx={{
                       px: 4,
                       py: 1.5,
@@ -613,6 +541,86 @@ const LandingPage = () => {
           </Grid>
         </Container>
 
+        {/* How It Works Section */}
+        <Container id="how-it-works" maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+          <Typography
+            variant="h3"
+            align="center"
+            sx={{ mb: { xs: 4, md: 6 }, fontWeight: 700, color: "primary.main", fontSize: { xs: '2rem', md: '3rem' } }}
+          >
+            How It Works
+          </Typography>
+          <Grid container spacing={4}>
+            {[
+              {
+                icon: PsychologyIcon,
+                title: "1. Set Your Interests",
+                description: "Add your interests so we can find the best match for you.",
+              },
+              {
+                icon: VideocamIcon,
+                title: "2. Start a Chat",
+                description: "Click the 'Start Chatting' button to get connected with someone new.",
+              },
+              {
+                icon: FavoriteIcon,
+                title: "3. Enjoy the Conversation",
+                description: "Have a great time getting to know someone with shared interests!",
+              },
+            ].map((step, index) => {
+              const IconComponent = step.icon;
+              return (
+                <Grid item xs={12} md={4} key={index}>
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      p: 4,
+                      height: "100%",
+                      borderRadius: 3,
+                      bgcolor: "background.paper",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 20px rgba(233, 30, 99, 0.2)",
+                      },
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          bgcolor: "secondary.main",
+                          width: 70,
+                          height: 70,
+                          mb: 3,
+                        }}
+                      >
+                        <IconComponent sx={{ fontSize: 40, color: "white" }} />
+                      </Avatar>
+                      <Typography
+                        variant="h5"
+                        gutterBottom
+                        sx={{ fontWeight: 600, color: "text.primary" }}
+                      >
+                        {step.title}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        {step.description}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
+
         {/* CTA Section */}
         <Box
           sx={{
@@ -654,6 +662,75 @@ const LandingPage = () => {
                 Start Chatting Now
               </Button>
             </Link>
+          </Container>
+        </Box>
+
+        {/* Contact Us Section */}
+        <Box
+          sx={{
+            py: 10,
+            // bgcolor: "background.paper", // Dark paper
+            textAlign: "center",
+          }}
+        >
+          <Container id="contact-us" maxWidth="md">
+            <Typography
+              variant="h3"
+              gutterBottom
+              sx={{ fontWeight: 700, mb: 3, color: "primary.main", fontSize: { xs: '2rem', md: '3rem' } }}
+            >
+              Contact Us
+            </Typography>
+            <Typography variant="h6" sx={{ mb: 4, opacity: 0.8 }}>
+              Have questions or feedback? We'd love to hear from you!
+            </Typography>
+            <Box component="form" noValidate autoComplete="off" sx={{ mt: 1, textAlign: 'left' }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="name"
+                    variant="outlined"
+                    required
+                    fullWidth
+                    id="name"
+                    label="Your Name"
+
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    variant="outlined"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    autoComplete="email"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    variant="outlined"
+                    required
+                    fullWidth
+                    name="message"
+                    label="Message"
+                    id="message"
+                    multiline
+                    rows={4}
+                  />
+                </Grid>
+              </Grid>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+                sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1.1rem', fontWeight: 600, borderRadius: 50 }}
+              >
+                Send Message
+              </Button>
+            </Box>
           </Container>
         </Box>
 

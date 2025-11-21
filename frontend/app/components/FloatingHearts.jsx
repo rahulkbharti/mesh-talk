@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, useMediaQuery, GlobalStyles } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
@@ -27,7 +26,7 @@ const floatingHeartsAnimation = `
 `;
 
 // --- Floating Hearts Component ---
-const FloatingHearts = ({ cute }) => {
+const FloatingHearts = () => {
     const isSmall = useMediaQuery('(max-width:600px)');
     const heartsCount = isSmall ? 8 : 15;
     return (
@@ -42,39 +41,25 @@ const FloatingHearts = ({ cute }) => {
                     height: "100%",
                     overflow: "hidden",
                     pointerEvents: "none",
-                    zIndex: 0,
+                    zIndex: 9998,
                 }}
             >
                 {[...Array(heartsCount)].map((_, i) => (
                     <FavoriteIcon
                         key={i}
                         className="heart"
-                        sx={
-                            cute
-                                ? {
-                                    left: `${Math.random() * 100}vw`,
-                                    animationDuration: `${Math.random() * 8 + 7}s`,
-                                    animationDelay: `${Math.random() * 5}s`,
-                                    fontSize: `${Math.random() * 2 + 1}rem`,
-                                    color:
-                                        i % 3 === 0
-                                            ? "rgba(255, 182, 193, 0.6)"
-                                            : i % 3 === 1
-                                                ? "rgba(255, 192, 203, 0.5)"
-                                                : "rgba(255, 218, 224, 0.4)",
-                                }
-                                : {
-                                    left: `${Math.random() * 100}vw`,
-                                    animationDuration: `${Math.random() * 5 + 5}s`,
-                                    animationDelay: `${Math.random() * 5}s`,
-                                    fontSize: `${Math.random() * 1.5 + 0.5}rem`,
-                                }
-                        }
+                        sx={{
+                            left: `${Math.random() * 100}vw`,
+                            animationDuration: `${Math.random() * 5 + 5}s`,
+                            animationDelay: `${Math.random() * 5}s`,
+                            fontSize: `${Math.random() * 1.5 + 0.5}rem`,
+                        }}
                     />
                 ))}
             </Box>
         </>
     );
 };
+
 
 export default FloatingHearts;
