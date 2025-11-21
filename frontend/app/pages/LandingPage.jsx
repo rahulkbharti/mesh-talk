@@ -120,7 +120,7 @@ const darkPinkLoveTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif', // Playful font
+    // fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif', // Playful font
     h1: {
       fontWeight: 700,
       fontSize: "3.5rem",
@@ -216,7 +216,7 @@ const LandingPage = () => {
                     display: { sm: 'block' },
                   }}
                 >
-                  LoveConnect
+                  MeshTalk
                 </Typography>
               </Box>
 
@@ -674,7 +674,7 @@ const LandingPage = () => {
             >
               <Grid item>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: "primary.main" }}>
-                  LoveConnect
+                  MeshTalk
                 </Typography>
                 <Typography
                   variant="body2"

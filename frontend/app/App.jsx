@@ -19,9 +19,9 @@ const theme = createTheme({
       paper: "#1e1e1e",
     },
   },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
+  // typography: {
+  //   fontFamily: '"Quicksand", "Roboto", "Helvetica", "Arial", sans-serif',
+  // },
   shape: {
     borderRadius: 5,
   },

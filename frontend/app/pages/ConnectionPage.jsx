@@ -131,9 +131,9 @@ const darkPinkLoveTheme = createTheme({
       secondary: "#bbbbbb",
     },
   },
-  typography: {
-    fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif',
-  },
+  // typography: {
+  //   fontFamily: '"Comic Sans MS", "cursive", "Arial", sans-serif',
+  // },
 });
 
 const ConnectionPage = () => {
@@ -189,6 +189,10 @@ const ConnectionPage = () => {
 
   // handle Connect
   const handleConnect = () => {
+    if (status === "connecting") {
+      endCall();
+      return;
+    }
     startCall(); // Implement this function to initiate new connection
 
     // Simulate connection after a brief delay (like real connection would take)
@@ -260,7 +264,7 @@ const ConnectionPage = () => {
                       display: { sm: 'block' },
                     }}
                   >
-                    LoveConnect
+                    MeshTalk
                   </Typography>
                 </Box>
               </Link>
@@ -601,7 +605,7 @@ const ConnectionPage = () => {
                     )
                   }
                   onClick={handleConnect}
-                  disabled={status === "connecting"}
+                  // disabled={status === "connecting"}
                   sx={{
                     textTransform: "none",
                     borderRadius: 3,
@@ -617,7 +621,7 @@ const ConnectionPage = () => {
                     transition: "all 0.2s",
                   }}
                 >
-                  {status === "connecting" ? "Connecting..." : "Start Connection"}
+                  {status === "connecting" ? "Stop" : "Start Connection"}
                 </Button>
               )}
             </Paper>
