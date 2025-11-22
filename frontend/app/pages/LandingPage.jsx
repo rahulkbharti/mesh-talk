@@ -86,24 +86,36 @@ const LandingPage = () => {
   return (
     <ThemeProvider theme={darkPinkLoveTheme}>
       <CssBaseline />
-      {/* <GlobalStyles styles={floatingHeartsAnimation} /> */}
+      <GlobalStyles
+        styles={{
+          html: { scrollBehavior: 'smooth' },
+          body: { scrollBehavior: 'smooth' },
+          '#hero, #features, #how-it-works, #cta, #contact, #contact-us': {
+            scrollMarginTop: '90px'
+          }
+        }}
+      />
       <FloatingHearts />
       <Box
+        id="hero"
         sx={{
           minHeight: "100vh",
           bgcolor: "background.default",
           position: "relative",
           zIndex: 1,
+          transition: "all 0.5s",
         }}
       >
         {/* Header */}
         <AppBar
-          position="static"
+          position="sticky"
           color="transparent"
           elevation={0}
           sx={{
             pt: 2,
             px: { xs: 2, md: 4 },
+            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.00)',
           }}
         >
           <Container maxWidth="lg" disableGutters>
@@ -259,7 +271,7 @@ const LandingPage = () => {
                     {/* <FavoriteIcon /> */}
                   </Avatar>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                    LoveConnect
+                    MeshTalk
                   </Typography>
                 </Box>
                 <IconButton
@@ -359,39 +371,92 @@ const LandingPage = () => {
         {/* Hero Section */}
         <Box
           sx={{
-            pt: { xs: 5, md: 8 },
-            pb: { xs: 4, md: 6 },
+            // --- REQUESTED CHANGES ---
+            minHeight: "calc(100vh - 100px)", // Full viewport height minus header
+            display: "flex",
+            alignItems: "center",
+            // -------------------------
+            pt: { xs: 8, md: 0 }, // Added padding top for mobile, 0 for desktop (since it's centered)
+            pb: { xs: 8, md: 0 },
             color: "text.primary",
+            position: "relative",
+
           }}
         >
           <Container maxWidth="lg">
-            <Grid container spacing={4} alignItems="center">
-              <Grid item xs={12} md={6}>
+            <Grid container spacing={6} alignItems="center">
+
+              {/* LEFT SIDE: TEXT CONTENT */}
+              <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+
+                {/* New: "Badge" content */}
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 1,
+                    bgcolor: "rgba(233, 30, 99, 0.1)",
+                    color: "primary.main",
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: 10,
+                    mb: 3,
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  <span style={{ fontSize: "1.2rem" }}>✨</span> #1 Platform for Meaningful Connections
+                </Box>
+
                 <Typography
                   component="h1"
                   variant="h1"
                   gutterBottom
                   sx={{
-                    fontWeight: 700,
-                    lineHeight: 1.2,
+                    fontWeight: 800,
+                    lineHeight: 1.1,
                     mb: 3,
-                    fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.5rem' },
+                    fontSize: { xs: '2.5rem', sm: '3.2rem', md: '4rem' },
+                    letterSpacing: "-0.02em",
                   }}
                 >
                   Connect with Kind{" "}
                   <span
                     style={{
                       color: darkPinkLoveTheme.palette.primary.main,
+                      position: "relative",
+                      display: "inline-block",
                     }}
                   >
                     Hearts
+                    {/* Optional decorative underline SVG could go here */}
                   </span>
                 </Typography>
-                <Typography variant="h5" sx={{ mb: 4, opacity: 0.9, fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
-                  Meet new people through video and text chat. Spread the love!
+
+                <Typography
+                  variant="h5"
+                  sx={{
+                    mb: 4,
+                    opacity: 0.8,
+                    fontSize: { xs: '1.1rem', md: '1.3rem' },
+                    lineHeight: 1.6,
+                    maxWidth: { md: "90%" },
+                  }}
+                >
+                  Experience a safer way to meet new people. Engage in genuine video and
+                  text conversations where kindness comes first. No swiping, just connecting.
                 </Typography>
-                <Box sx={{ display: "flex", gap: 2, flexWrap: 'wrap' }}>
-                  <Link to="/connection">
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    flexWrap: "wrap",
+                    justifyContent: { xs: 'center', md: 'flex-start' },
+                    mb: 5, // Added margin bottom to separate from stats
+                  }}
+                >
+                  <Link to="/connection" style={{ textDecoration: 'none' }}>
                     <Button
                       variant="contained"
                       color="primary"
@@ -399,19 +464,21 @@ const LandingPage = () => {
                       endIcon={<ArrowForwardIcon />}
                       sx={{
                         px: 4,
-                        py: 1.5,
+                        py: 1.8,
                         borderRadius: 50,
                         fontSize: "1.1rem",
                         textTransform: "none",
-                        fontWeight: 600,
-                        boxShadow: "0 4px 15px rgba(233, 30, 99, 0.4)",
+                        fontWeight: 700,
+                        boxShadow: "0 8px 25px rgba(233, 30, 99, 0.35)",
+                        transition: "all 0.3s ease",
                         "&:hover": {
-                          transform: "scale(1.05)",
+                          transform: "translateY(-3px)",
+                          boxShadow: "0 12px 30px rgba(233, 30, 99, 0.5)",
                         },
-                        width: { xs: '100%', sm: 'auto' },
+                        width: { xs: "100%", sm: "auto" },
                       }}
                     >
-                      Start Chatting
+                      Start Chatting Now
                     </Button>
                   </Link>
 
@@ -423,35 +490,90 @@ const LandingPage = () => {
                     href="#how-it-works"
                     sx={{
                       px: 4,
-                      py: 1.5,
+                      py: 1.8,
                       borderRadius: 50,
                       fontSize: "1.1rem",
                       textTransform: "none",
                       fontWeight: 600,
-                      width: { xs: '100%', sm: 'auto' },
+                      borderWidth: 2,
+                      width: { xs: "100%", sm: "auto" },
+                      "&:hover": {
+                        borderWidth: 2,
+                        bgcolor: "rgba(233, 30, 99, 0.05)",
+                      },
                     }}
                   >
                     How It Works
                   </Button>
                 </Box>
+
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 4,
+                    justifyContent: { xs: "center", md: "flex-start" },
+                    mb: 2,
+                  }}
+                >
+                  {[
+                    { label: "Total Users", value: "12,450+" },
+                    { label: "Connections Made", value: "87,300+" },
+                    { label: "Avg Call Rating", value: "4.9/5" },
+                  ].map((stat) => (
+                    <Box
+                      key={stat.label}
+                      sx={{
+                        minWidth: 110,
+                        px: 2,
+                        py: 1,
+                        borderRadius: 3,
+                        bgcolor: "rgba(233,30,99,0.06)",
+                        border: "1px solid",
+                        borderColor: "primary.main",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: 700,
+                          color: "primary.main",
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {stat.value}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 500, opacity: 0.8 }}>
+                        {stat.label}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
               </Grid>
+
+              {/* RIGHT SIDE: IMAGE */}
               <Grid item xs={12} md={6}>
                 <Box
                   sx={{
-                    height: { xs: 250, md: 350 },
-                    backgroundImage:
-                      "url('https://media.tenor.com/ffG8ZgTeQ74AAAAj/peach-and-goma-cute.gif')",
+                    height: { xs: 300, md: 500 },
+                    width: "100%",
+                    backgroundImage: "url('https://media.tenor.com/idwX3P42TuQAAAAi/peachu-gomu.gif')",
                     backgroundSize: "contain",
                     backgroundRepeat: "no-repeat",
                     backgroundPosition: "center",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    // Added a subtle drop shadow to the graphic to make it pop
+                    filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.15))",
+                    animation: "float 6s ease-in-out infinite",
+                    "@keyframes float": {
+                      "0%, 100%": { transform: "translateY(0)" },
+                      "50%": { transform: "translateY(-20px)" },
+                    },
                   }}
-                >
-                  {/* Optional content here */}
-                </Box>
+                />
               </Grid>
+
             </Grid>
           </Container>
         </Box>

@@ -279,7 +279,7 @@ const ConnectionPage = () => {
                 bgcolor: "background.paper",
                 position: "relative",
                 overflow: "hidden",
-                minHeight: isMobile ? "200px" : "400px",
+                minHeight: isMobile ? "250px" : "400px",
                 border: status === "connected" ? "3px solid" : "1px solid",
                 borderColor: status === "connected" ? "primary.main" : "divider",
                 boxShadow: status === "connected"
