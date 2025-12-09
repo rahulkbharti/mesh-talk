@@ -1,6 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import ConnectionPage from "./pages/ConnectionPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CommunityGuidelines from "./pages/CommunityGuidelines";
+import ContactUs from "./pages/ContactUs";
 
 const AppRouter = () => {
   return (
@@ -16,6 +20,10 @@ const AppRouter = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/connection" element={<ConnectionPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+        <Route path="/contact" element={<ContactUs />} />
       </Routes>
     </Router>
   );

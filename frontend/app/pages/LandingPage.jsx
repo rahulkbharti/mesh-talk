@@ -795,7 +795,7 @@ const LandingPage = () => {
             textAlign: "center",
           }}
         >
-          <Container id="contact-us" maxWidth="md">
+          <Container id="contact" maxWidth="md">
             <Typography
               variant="h3"
               gutterBottom
@@ -857,7 +857,7 @@ const LandingPage = () => {
         </Box>
 
         {/* Footer */}
-        <Box id="contact"
+        <Box
           sx={{
             py: 4,
             bgcolor: "background.default", // Darkest background
@@ -906,7 +906,7 @@ const LandingPage = () => {
                     flexWrap: "wrap",
                   }}
                 >
-                  <Typography component="a" href="#" target="_blank" rel="noopener noreferrer"
+                  <Typography component={Link} to="/privacy-policy"
                     variant="body2"
                     color="text.secondary"
                     sx={{
@@ -917,7 +917,7 @@ const LandingPage = () => {
                   >
                     Privacy Policy
                   </Typography>
-                  <Typography component="a" href="#" target="_blank" rel="noopener noreferrer"
+                  <Typography component={Link} to="/terms-of-service"
                     variant="body2"
                     color="text.secondary"
                     sx={{
@@ -928,7 +928,7 @@ const LandingPage = () => {
                   >
                     Terms of Service
                   </Typography>
-                  <Typography component="a" href="#" target="_blank" rel="noopener noreferrer"
+                  <Typography component={Link} to="/community-guidelines"
                     variant="body2"
                     color="text.secondary"
                     sx={{
@@ -939,7 +939,7 @@ const LandingPage = () => {
                   >
                     Community Guidelines
                   </Typography>
-                  <Typography component="a" href="#contact"
+                  <Typography component={Link} to="/contact"
                     variant="body2"
                     color="text.secondary"
                     sx={{

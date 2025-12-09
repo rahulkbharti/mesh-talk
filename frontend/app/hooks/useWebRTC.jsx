@@ -38,6 +38,8 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
     if (!channel) return;
     channel.onmessage = (event) => {
       console.log("Message Received:", event.data);
+      const audio = new Audio("/mesh-talk/23.mp3");
+      audio.play().catch((err) => console.error("Audio play failed:", err));
       setMessage((prev) => [
         ...prev,
         {
@@ -52,6 +54,12 @@ const useWebRTC = (serverUrl = "http://localhost:3000", userData) => {
       console.log("Channel Opened");
       channel.send("Your Connected!");
       setDataChannel(channel);
+      if (window.navigator.vibrate) {
+        window.navigator.vibrate([50, 50, 150]);
+        console.log("Connection success haptic feedback sent.");
+      } else {
+        console.warn("Vibration API not supported on this device.");
+      }
       updateStatus("connected");
     };
     channel.onclose = () => {
