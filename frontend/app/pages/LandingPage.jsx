@@ -45,6 +45,7 @@ import {
 import { Link } from "react-router-dom";
 import darkPinkLoveTheme from "../utils/theme";
 import FloatingHearts from "../components/FloatingHearts";
+import PwaInstallPrompt from "../components/PwaInstallPrompt";
 import { io } from "socket.io-client";
 
 const SOCKET_SERVER = import.meta.env.VITE_BACKEND;
@@ -220,6 +221,11 @@ const LandingPage = () => {
                   }} />
                 )}
 
+                {/* Install App Button */}
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                  <PwaInstallPrompt variant="button" />
+                </Box>
+
                 {/* Mobile Menu Icon */}
                 <IconButton
                   aria-label="menu"
@@ -296,6 +302,9 @@ const LandingPage = () => {
                   borderColor: 'primary.main',
                 }}
               />
+              <Box sx={{ mt: 2 }}>
+                <PwaInstallPrompt variant="button" />
+              </Box>
             </Box>
 
             {/* Menu Items */}

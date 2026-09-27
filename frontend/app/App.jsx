@@ -4,6 +4,7 @@ import store from "./store/store";
 import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./utils/queryClient";
+import PwaInstallPrompt from "./components/PwaInstallPrompt";
 
 const theme = createTheme({
   palette: {
@@ -34,6 +35,7 @@ const App = () => {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <AppRouter />
+          <PwaInstallPrompt variant="banner" />
         </ThemeProvider>
       </QueryClientProvider>
     </Provider>
